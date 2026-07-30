@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -49,7 +46,7 @@ fn default_theme() -> String {
 }
 
 fn default_theme_color() -> String {
-    "neutral".into()
+    "green".into()
 }
 
 fn default_radius() -> String {
@@ -76,6 +73,38 @@ fn default_selected_styles() -> Vec<String> {
     vec!["default".into()]
 }
 
+const SUPPORTED_LANGUAGES: &[&str] = &[
+    "en", "zh-CN", "zh-TW", "ja", "ko", "es", "de", "fr", "pt-BR", "ru", "hi", "id", "vi", "th",
+    "tr", "it", "pl", "uk", "nl", "ms",
+];
+
+fn is_supported_language(code: &str) -> bool {
+    SUPPORTED_LANGUAGES.contains(&code)
+}
+
+fn default_language_pairs() -> Vec<LanguagePair> {
+    vec![
+        LanguagePair {
+            id: "pair-zh-cn-en".into(),
+            source: "zh-CN".into(),
+            target: "en".into(),
+        },
+        LanguagePair {
+            id: "pair-en-ja".into(),
+            source: "en".into(),
+            target: "ja".into(),
+        },
+    ]
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct LanguagePair {
+    pub id: String,
+    pub source: String,
+    pub target: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppSettings {
@@ -93,8 +122,6 @@ pub struct AppSettings {
     pub shortcut: String,
     #[serde(default = "default_target_language")]
     pub default_target_language: String,
-    #[serde(default)]
-    pub edge_dock_enabled: bool,
     #[serde(default = "default_close_behavior")]
     pub close_behavior: String,
     #[serde(default)]
@@ -109,6 +136,9 @@ pub struct AppSettings {
     pub providers: Vec<ProviderConfig>,
     #[serde(default)]
     pub styles: Vec<StyleConfig>,
+    /// Quick-select language pairs for the main UI (source and target stay separate dropdowns).
+    #[serde(default = "default_language_pairs")]
+    pub language_pairs: Vec<LanguagePair>,
 }
 
 impl Default for AppSettings {
@@ -121,7 +151,6 @@ impl Default for AppSettings {
             radius: default_radius(),
             shortcut: default_shortcut(),
             default_target_language: default_target_language(),
-            edge_dock_enabled: cfg!(any(windows, target_os = "macos")),
             close_behavior: default_close_behavior(),
             always_on_top: false,
             work_mode: default_work_mode(),
@@ -129,6 +158,7 @@ impl Default for AppSettings {
             default_provider_id: None,
             providers: Vec::new(),
             styles: Vec::new(),
+            language_pairs: default_language_pairs(),
         }
     }
 }
@@ -164,6 +194,21 @@ impl AppSettings {
             {
                 style.provider_id = None;
             }
+        }
+
+        let mut seen = std::collections::HashSet::<(String, String)>::new();
+        self.language_pairs.retain(|pair| {
+            if pair.id.trim().is_empty()
+                || !is_supported_language(&pair.source)
+                || !is_supported_language(&pair.target)
+                || pair.source == pair.target
+            {
+                return false;
+            }
+            seen.insert((pair.source.clone(), pair.target.clone()))
+        });
+        if self.language_pairs.len() > 8 {
+            self.language_pairs.truncate(8);
         }
     }
 }

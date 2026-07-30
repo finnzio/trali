@@ -49,7 +49,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       stored === "violet" ||
       stored === "orange"
       ? stored
-      : "neutral";
+      : "green";
   });
   const [radius, setRadiusState] = useState<RadiusPreset>(() => {
     const stored = window.localStorage.getItem(RADIUS_STORAGE_KEY);

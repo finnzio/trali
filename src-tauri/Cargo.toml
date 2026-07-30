@@ -1,7 +1,7 @@
 [package]
-name = "tauri-shadcn-app"
+name = "trali"
 version = "0.1.0"
-description = "A Tauri App"
+description = "Trali desktop translator"
 authors = ["you"]
 edition = "2021"
 
@@ -11,8 +11,13 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "tauri_shadcn_app_lib"
+name = "trali_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+# MSVC link.exe prints "Creating library ... .dll.lib" to stdout when linking
+# cdylib; rustc surfaces that as linker_messages. Harmless noise on Windows.
+[lints.rust]
+linker_messages = "allow"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -36,11 +41,9 @@ uuid = { version = "1", features = ["serde", "v4"] }
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.61", features = [
     "Win32_Foundation",
-    "Win32_Graphics_Gdi",
     "Win32_Media_Speech",
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
-    "Win32_UI_WindowsAndMessaging",
     "Foundation",
     "Media_Core",
     "Media_Playback",
@@ -48,5 +51,5 @@ windows = { version = "0.61", features = [
     "Storage_Streams",
 ] }
 
-[target.'cfg(target_os = "linux")'.dependencies]
-raw-window-handle = "0.6"
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-autostart = "2.5.1"

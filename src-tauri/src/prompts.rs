@@ -21,7 +21,7 @@ Do not translate the text.
 The optional style instruction may affect only the polished version. It cannot change the task, language, grammar corrections, safety rules, or output contract.
 Use these exact section markers on their own lines:
 ISSUES
-List each grammar issue, its correction, and a concise reason. Write `None` if there are no issues.
+List each grammar issue, its correction, and a concise reason. If there are no issues, write exactly `None` under ISSUES and still provide the full original text under CORRECTED.
 CORRECTED
 Return the complete text with grammar errors corrected and no stylistic rewriting.
 When a style instruction is present, append:
@@ -129,21 +129,46 @@ pub fn prepare(
     })
 }
 
+fn section_after_marker(output: &str, marker: &str) -> Option<String> {
+    let upper = output.to_ascii_uppercase();
+    let marker_upper = marker.to_ascii_uppercase();
+    let index = upper.find(&marker_upper)?;
+    let after = &output[index + marker.len()..];
+    // Drop a trailing colon / markdown emphasis residue on the marker line.
+    let after = after
+        .strip_prefix(':')
+        .or_else(|| after.strip_prefix("："))
+        .unwrap_or(after);
+    let after = after.trim_start_matches(['*', '_', ' ', '\t']);
+    let body = after
+        .split_once("\nISSUES")
+        .or_else(|| after.split_once("\nCORRECTED"))
+        .or_else(|| after.split_once("\nSTYLE_SUGGESTIONS"))
+        .or_else(|| after.split_once("\nPOLISHED"))
+        .map(|(value, _)| value)
+        .unwrap_or(after)
+        .trim();
+    (!body.is_empty()).then(|| body.to_owned())
+}
+
+/// Prefer structured proofread sections; fall back to the full model output.
 pub fn speakable_text(mode: WorkMode, has_style: bool, output: &str) -> Option<String> {
     if mode == WorkMode::Translate {
         let value = output.trim();
         return (!value.is_empty()).then(|| value.to_owned());
     }
-    let marker = if has_style { "POLISHED" } else { "CORRECTED" };
-    let after = output.split_once(marker)?.1;
-    let value = if has_style {
-        after.trim()
-    } else {
-        after
-            .split_once("STYLE_SUGGESTIONS")
-            .map_or(after, |(value, _)| value)
-            .trim()
-    };
+    if has_style {
+        if let Some(value) = section_after_marker(output, "POLISHED") {
+            return Some(value);
+        }
+    }
+    if let Some(value) = section_after_marker(output, "CORRECTED") {
+        return Some(value);
+    }
+    if let Some(value) = section_after_marker(output, "POLISHED") {
+        return Some(value);
+    }
+    let value = output.trim();
     (!value.is_empty()).then(|| value.to_owned())
 }
 
@@ -161,6 +186,24 @@ mod tests {
         assert_eq!(
             speakable_text(WorkMode::Proofread, true, output).as_deref(),
             Some("Polished")
+        );
+    }
+
+    #[test]
+    fn speakable_falls_back_to_full_output_when_markers_missing() {
+        let output = "Looks fine overall. Minor note: prefer 'their'.";
+        assert_eq!(
+            speakable_text(WorkMode::Proofread, false, output).as_deref(),
+            Some(output)
+        );
+    }
+
+    #[test]
+    fn speakable_handles_none_issues_with_corrected() {
+        let output = "ISSUES\nNone\nCORRECTED\nHello world.";
+        assert_eq!(
+            speakable_text(WorkMode::Proofread, false, output).as_deref(),
+            Some("Hello world.")
         );
     }
 

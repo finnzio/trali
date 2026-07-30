@@ -54,6 +54,16 @@ fn language_tag(language: &str) -> String {
         "fr" => "fr-FR",
         "pt-BR" | "pt" => "pt-BR",
         "ru" => "ru-RU",
+        "hi" => "hi-IN",
+        "id" => "id-ID",
+        "vi" => "vi-VN",
+        "th" => "th-TH",
+        "tr" => "tr-TR",
+        "it" => "it-IT",
+        "pl" => "pl-PL",
+        "uk" => "uk-UA",
+        "nl" => "nl-NL",
+        "ms" => "ms-MY",
         value => value,
     }
     .to_owned()
@@ -68,13 +78,8 @@ fn split_utterances(text: &str) -> Vec<String> {
     for character in text.chars() {
         current.push(character);
         length += 1;
-        let sentence_boundary = matches!(
-            character,
-            '.' | '!' | '?' | '。' | '！' | '？' | '\n'
-        );
-        if length >= MAX_CHARS
-            || (length >= MIN_SENTENCE_CHARS && sentence_boundary)
-        {
+        let sentence_boundary = matches!(character, '.' | '!' | '?' | '。' | '！' | '？' | '\n');
+        if length >= MAX_CHARS || (length >= MIN_SENTENCE_CHARS && sentence_boundary) {
             let chunk = current.trim().to_owned();
             if !chunk.is_empty() {
                 chunks.push(chunk);
@@ -105,10 +110,7 @@ mod platform {
         },
     };
 
-    use super::{
-        emit_state, language_tag, split_utterances, SpeechCapabilities,
-        SpeechRequest,
-    };
+    use super::{emit_state, language_tag, split_utterances, SpeechCapabilities, SpeechRequest};
     use crate::error::{AppError, AppResult};
 
     const CLSID_SPVOICE: windows::core::GUID =
@@ -280,10 +282,7 @@ mod platform {
 
     use tauri::AppHandle;
 
-    use super::{
-        emit_state, language_tag, split_utterances, SpeechCapabilities,
-        SpeechRequest,
-    };
+    use super::{emit_state, language_tag, split_utterances, SpeechCapabilities, SpeechRequest};
     use crate::error::{AppError, AppResult};
 
     type Id = *mut c_void;
@@ -387,9 +386,7 @@ mod platform {
                     } else {
                         stop(synth);
                     }
-                    let Some(text) =
-                        ns_string(&split_utterances(&request.text).join("\n"))
-                    else {
+                    let Some(text) = ns_string(&split_utterances(&request.text).join("\n")) else {
                         emit_state(
                             &app,
                             "error",
