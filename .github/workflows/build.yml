@@ -1,0 +1,108 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - platform: windows-latest
+            args: ""
+            name: windows-x64
+          # macOS Apple Silicon
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+            name: macos-aarch64
+          # macOS Intel
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+            name: macos-x64
+          # Linux
+          - platform: ubuntu-22.04
+            args: ""
+            name: linux-x64
+
+    runs-on: ${{ matrix.platform }}
+    name: ${{ matrix.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            xdg-utils
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+          shared-key: ${{ matrix.name }}
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Draft release only on version tags (e.g. v0.1.0).
+          # Leave empty on branch/PR builds so no release is created.
+          tagName: ${{ startsWith(github.ref, 'refs/tags/v') && 'v__VERSION__' || '' }}
+          releaseName: Trali v__VERSION__
+          releaseBody: |
+            Download installers for Windows, macOS, and Linux from the assets below.
+
+            | Platform | Packages |
+            |----------|----------|
+            | Windows | `.msi`, NSIS `.exe` |
+            | macOS | `.dmg` (Apple Silicon + Intel) |
+            | Linux | `.AppImage`, `.deb` |
+          releaseDraft: true
+          prerelease: false
+          uploadUpdaterJson: false
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: trali-[platform]-[arch]-[bundle]
+          tauriScript: pnpm tauri
+          args: ${{ matrix.args }}

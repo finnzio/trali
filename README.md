@@ -109,6 +109,33 @@ cargo check --manifest-path src-tauri/Cargo.toml
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
+## CI / multi-platform builds
+
+GitHub Actions workflow: [`.github/workflows/build.yml`](.github/workflows/build.yml)
+
+| Target | Runner | Notes |
+|--------|--------|--------|
+| Windows x64 | `windows-latest` | MSI + NSIS |
+| macOS aarch64 | `macos-latest` | Apple Silicon DMG |
+| macOS x64 | `macos-latest` | Intel DMG |
+| Linux x64 | `ubuntu-22.04` | AppImage + deb |
+
+**Triggers**
+
+- Push / PR to `main` — build and upload workflow artifacts
+- Manual run (`workflow_dispatch`)
+- Tag `v*` (e.g. `v0.1.0`) — same builds, plus a **draft** GitHub Release with installers
+
+```powershell
+# Example: cut a draft release after bumping version in package.json / tauri.conf.json / Cargo.toml
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Artifacts appear on the Actions run page; release assets appear under the draft release when building from a tag.
+
+> Repo Settings → Actions → General → Workflow permissions: enable **Read and write permissions** so release uploads work.
+
 ## Configuration
 
 ### Providers
