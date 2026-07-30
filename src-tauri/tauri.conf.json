@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "AI Translator",
+  "productName": "Trali",
   "version": "0.1.0",
   "identifier": "com.aitranslator.desktop",
   "build": {
@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "AI Translator",
+        "title": "Trali",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "decorations": false,
+        "shadow": true
       }
     ],
     "security": {
@@ -30,6 +32,12 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico"
+      }
+    }
   }
 }
