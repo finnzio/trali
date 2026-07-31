@@ -126,6 +126,15 @@ import {
   type SpeechState,
   type StyleConfig,
 } from "@/lib/backend";
+import {
+  getProviderPreset,
+  providerPresets,
+} from "@/lib/provider-presets";
+import {
+  loadModelsDevModels,
+  type ModelOption,
+  type ModelsDevModelMap,
+} from "@/lib/models-dev";
 import "./App.css";
 
 const DEFAULT_TARGET_KEY = "translator.defaultTargetLanguage";
@@ -468,8 +477,10 @@ function App() {
     null,
   );
   const [providerModels, setProviderModels] = useState<
-    Record<string, string[]>
+    Record<string, ModelOption[]>
   >({});
+  const [modelsDevModels, setModelsDevModels] = useState<ModelsDevModelMap>({});
+  const [modelsDevLoading, setModelsDevLoading] = useState(false);
   const [testingProviderId, setTestingProviderId] = useState<string | null>(
     null,
   );
@@ -640,6 +651,27 @@ function App() {
     // The first snapshot deliberately uses the initial legacy state for migration.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!settingsOpen || settingsTab !== "provider") return;
+
+    let cancelled = false;
+    setModelsDevLoading(true);
+    void loadModelsDevModels()
+      .then((models) => {
+        if (!cancelled) setModelsDevModels(models);
+      })
+      .catch(() => {
+        // The provider's own /models endpoint remains available as a fallback.
+      })
+      .finally(() => {
+        if (!cancelled) setModelsDevLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [settingsOpen, settingsTab]);
 
   useEffect(() => {
     if (!backendReady || !isTauri()) return;
@@ -1122,6 +1154,34 @@ function App() {
     if (!defaultProviderId) setDefaultProviderId(id);
   }
 
+  function applyProviderPreset(providerId: string, presetId: string) {
+    const preset = providerPresets.find((item) => item.id === presetId);
+    if (!preset) return;
+
+    setProviderConnectionStatus((current) => {
+      const next = { ...current };
+      delete next[providerId];
+      return next;
+    });
+    setProviderModels((current) => {
+      const next = { ...current };
+      delete next[providerId];
+      return next;
+    });
+    saveProviders(
+      providers.map((provider) =>
+        provider.id === providerId
+          ? {
+              ...provider,
+              name: preset.name,
+              type: preset.type,
+              endpoint: preset.endpoint,
+            }
+          : provider,
+      ),
+    );
+  }
+
   function updateProvider(
     id: string,
     field: keyof Omit<ProviderConfig, "id">,
@@ -1343,7 +1403,7 @@ function App() {
       const models = await fetchBackendProviderModels(provider.id);
       setProviderModels((current) => ({
         ...current,
-        [provider.id]: models,
+        [provider.id]: models.map((model) => ({ id: model, name: model })),
       }));
     } catch {
       setProviderModels((current) => ({
@@ -1374,6 +1434,14 @@ function App() {
     } finally {
       setTestingProviderId(null);
     }
+  }
+
+  function getProviderModelOptions(provider: ProviderConfig) {
+    const fetchedModels = providerModels[provider.id];
+    if (fetchedModels) return fetchedModels;
+
+    const preset = getProviderPreset(provider);
+    return preset ? modelsDevModels[preset.id] : undefined;
   }
 
   async function commitProviderApiKey(providerId: string) {
@@ -1755,9 +1823,9 @@ function App() {
     );
 
     return (
-      <main className="h-svh overflow-auto bg-muted/30">
-        <div className="mx-auto w-full max-w-2xl px-3 py-2 sm:px-4">
-          <header className="flex items-center gap-2">
+      <main className="flex h-svh flex-col overflow-hidden bg-muted/30">
+        <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-3 py-2 sm:px-4">
+          <header className="flex shrink-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -1773,7 +1841,7 @@ function App() {
           </header>
 
           <div
-            className="relative mt-2 grid w-fit grid-cols-4 rounded-md bg-muted p-0.5"
+            className="relative mt-2 grid w-fit shrink-0 grid-cols-4 rounded-md bg-muted p-0.5"
             role="tablist"
             aria-label={t("settingsSections")}
           >
@@ -1808,7 +1876,7 @@ function App() {
           </div>
 
           <section
-            className="mt-3 rounded-xl border bg-card p-4"
+            className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl border bg-card p-4"
             role="tabpanel"
           >
             {settingsTab === "provider" && (
@@ -1932,6 +2000,33 @@ function App() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label>{t("providerPreset")}</Label>
+                        <Select
+                          value={getProviderPreset(provider)?.id ?? "custom"}
+                          onValueChange={(value) =>
+                            applyProviderPreset(provider.id, String(value))
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue>
+                              {getProviderPreset(provider)?.name ??
+                                t("providerCustom")}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent align="start">
+                            <SelectItem value="custom">
+                              {t("providerCustom")}
+                            </SelectItem>
+                            <SelectSeparator />
+                            {providerPresets.map((preset) => (
+                              <SelectItem key={preset.id} value={preset.id}>
+                                {preset.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="grid gap-1.5">
                         <Label>{t("providerType")}</Label>
                         <Select
@@ -2032,7 +2127,14 @@ function App() {
                       </div>
                       <div className="grid gap-1.5">
                         <div className="flex items-center justify-between gap-2">
-                          <Label>{t("providerModel")}</Label>
+                          <div className="flex items-center gap-2">
+                            <Label>{t("providerModel")}</Label>
+                            {modelsDevLoading && (
+                              <span className="text-xs text-muted-foreground">
+                                models.dev…
+                              </span>
+                            )}
+                          </div>
                           <Button
                             variant="ghost"
                             size="xs"
@@ -2052,7 +2154,7 @@ function App() {
                             {t("fetchModels")}
                           </Button>
                         </div>
-                        {providerModels[provider.id]?.length ? (
+                        {getProviderModelOptions(provider)?.length ? (
                           <Select
                             value={provider.model}
                             onValueChange={(value) =>
@@ -2069,9 +2171,11 @@ function App() {
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent align="start">
-                              {providerModels[provider.id].map((model) => (
-                                <SelectItem key={model} value={model}>
-                                  {model}
+                              {getProviderModelOptions(provider)?.map((model) => (
+                                <SelectItem key={model.id} value={model.id}>
+                                  {model.name === model.id
+                                    ? model.id
+                                    : `${model.name} · ${model.id}`}
                                 </SelectItem>
                               ))}
                             </SelectContent>
