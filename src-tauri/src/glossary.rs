@@ -95,11 +95,7 @@ impl GlossaryStore {
     }
 
     pub fn save(&self, glossary: &GlossaryData) -> AppResult<()> {
-        crate::storage::atomic_write(
-            &self.path,
-            Self::export(glossary)?.as_bytes(),
-            "glossary",
-        )
+        crate::storage::atomic_write(&self.path, Self::export(glossary)?.as_bytes(), "glossary")
     }
 }
 

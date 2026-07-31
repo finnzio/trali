@@ -29,6 +29,12 @@ export type GlossaryData = {
   concepts: GlossaryConcept[];
 };
 
+export type LanguagePair = {
+  id: string;
+  source: string;
+  target: string;
+};
+
 export type AppSettings = {
   version: 2;
   interfaceLanguage: string;
@@ -37,7 +43,6 @@ export type AppSettings = {
   radius: string;
   shortcut: string;
   defaultTargetLanguage: string;
-  edgeDockEnabled: boolean;
   closeBehavior: string;
   alwaysOnTop: boolean;
   workMode: string;
@@ -45,6 +50,7 @@ export type AppSettings = {
   defaultProviderId: string | null;
   providers: ProviderConfig[];
   styles: StyleConfig[];
+  languagePairs: LanguagePair[];
 };
 
 export type BackendSnapshot = {

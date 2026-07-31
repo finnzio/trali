@@ -12,17 +12,23 @@ type TransferStyle = {
   prompt: string;
 };
 
+type TransferLanguagePair = {
+  id: string;
+  source: string;
+  target: string;
+};
+
 export type SettingsTransfer = {
   interfaceLanguage: string;
   theme: string;
   themeColor: string;
   radius: string;
   shortcut: string;
-  edgeDockEnabled: boolean;
   closeBehavior: string;
   defaultTargetLanguage: string;
   providers: TransferProvider[];
   styles: TransferStyle[];
+  languagePairs: TransferLanguagePair[];
 };
 
 function tomlString(value: string) {
@@ -37,7 +43,6 @@ export function serializeSettings(settings: SettingsTransfer) {
     `theme_color = ${tomlString(settings.themeColor)}`,
     `radius = ${tomlString(settings.radius)}`,
     `shortcut = ${tomlString(settings.shortcut)}`,
-    `edge_dock_enabled = ${settings.edgeDockEnabled}`,
     `close_behavior = ${tomlString(settings.closeBehavior)}`,
     `default_target_language = ${tomlString(settings.defaultTargetLanguage)}`,
   ];
@@ -64,6 +69,16 @@ export function serializeSettings(settings: SettingsTransfer) {
     );
   }
 
+  for (const pair of settings.languagePairs) {
+    lines.push(
+      "",
+      "[[language_pairs]]",
+      `id = ${tomlString(pair.id)}`,
+      `source = ${tomlString(pair.source)}`,
+      `target = ${tomlString(pair.target)}`,
+    );
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -71,14 +86,14 @@ export function parseSettings(text: string): SettingsTransfer {
   const result: SettingsTransfer = {
     interfaceLanguage: "zh-CN",
     theme: "auto",
-    themeColor: "neutral",
+    themeColor: "green",
     radius: "default",
     shortcut: "CommandOrControl+Shift+Space",
-    edgeDockEnabled: true,
     closeBehavior: "tray",
     defaultTargetLanguage: "en",
     providers: [],
     styles: [],
+    languagePairs: [],
   };
   let current: Record<string, string> | null = null;
 
@@ -93,6 +108,11 @@ export function parseSettings(text: string): SettingsTransfer {
     if (line === "[[styles]]") {
       current = {};
       result.styles.push(current as TransferStyle);
+      continue;
+    }
+    if (line === "[[language_pairs]]") {
+      current = {};
+      result.languagePairs.push(current as TransferLanguagePair);
       continue;
     }
     const match = /^([a-z_]+)\s*=\s*(.+)$/u.exec(line);
@@ -111,8 +131,6 @@ export function parseSettings(text: string): SettingsTransfer {
       result.radius = String(value);
     } else if (key === "shortcut") {
       result.shortcut = String(value);
-    } else if (key === "edge_dock_enabled") {
-      result.edgeDockEnabled = String(value).toLowerCase() === "true";
     } else if (key === "close_behavior") {
       result.closeBehavior = String(value);
     } else if (key === "default_target_language") {

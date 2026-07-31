@@ -6,7 +6,6 @@ use tauri::{
 };
 
 mod commands;
-mod edge_dock;
 mod error;
 mod generation;
 mod glossary;
@@ -41,16 +40,6 @@ fn toggle_window(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn edge_dock_supported() -> bool {
-    edge_dock::is_supported()
-}
-
-#[tauri::command]
-fn set_edge_dock_enabled(enabled: bool) {
-    edge_dock::set_enabled(enabled);
-}
-
-#[tauri::command]
 fn set_close_to_tray(enabled: bool) {
     CLOSE_TO_TRAY.store(enabled, Ordering::Relaxed);
 }
@@ -61,14 +50,18 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            #[cfg(desktop)]
+            app.handle().plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                None,
+            ))?;
+
             let backend = commands::BackendState::initialize(app.handle())?;
             let initial_settings = backend.settings.blocking_read().clone();
             CLOSE_TO_TRAY.store(initial_settings.close_behavior == "tray", Ordering::Relaxed);
-            edge_dock::set_enabled(initial_settings.edge_dock_enabled);
 
             if let Some(window) = app.get_webview_window("main") {
                 window.set_always_on_top(initial_settings.always_on_top)?;
-                edge_dock::start(window);
             }
             app.manage(backend);
 
@@ -82,6 +75,7 @@ pub fn run() {
                         .ok_or("default window icon is unavailable")?
                         .clone(),
                 )
+                .tooltip("Trali")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -123,17 +117,10 @@ pub fn run() {
                     let _ = state.speech.stop();
                 }
             }
-            tauri::WindowEvent::Resized(_) => {
-                if window.is_minimized().unwrap_or(false) {
-                    let _ = window.hide();
-                }
-            }
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             toggle_window,
-            edge_dock_supported,
-            set_edge_dock_enabled,
             set_close_to_tray,
             commands::load_backend_snapshot,
             commands::save_settings,
