@@ -19,6 +19,35 @@ export type StyleConfig = {
   providerId: string | null;
 };
 
+export type PromptOptimizationAnswer = {
+  question: string;
+  answer: string;
+};
+
+export type PromptOptimizationQuestion = {
+  text: string;
+  options: string[];
+  allowCustom: boolean;
+};
+
+export type PromptOptimizationRequest = {
+  providerId: string;
+  currentPrompt: string;
+  answers: PromptOptimizationAnswer[];
+  interfaceLanguage: string;
+};
+
+export type PromptOptimizationResponse =
+  | {
+      kind: "question";
+      question: PromptOptimizationQuestion;
+      round: number;
+    }
+  | {
+      kind: "final";
+      optimizedPrompt: string;
+    };
+
 export type GlossaryConcept = {
   id: string;
   terms: Record<string, string>;
@@ -184,6 +213,12 @@ export function generate(
 
 export function cancelGeneration(requestId: string) {
   return invoke<void>("cancel_generation", { requestId });
+}
+
+export function optimizeStylePrompt(request: PromptOptimizationRequest) {
+  return invoke<PromptOptimizationResponse>("optimize_style_prompt", {
+    request,
+  });
 }
 
 export function getSpeechCapabilities() {

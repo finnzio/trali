@@ -49,6 +49,7 @@ import {
   WindowDragRegion,
 } from "@/components/window-chrome";
 import { TransferStatusIcon } from "@/components/transfer-status-icon";
+import { PromptOptimizerDialog } from "@/components/prompt-optimizer-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -631,6 +632,9 @@ function App() {
     useState<ProviderConfig | null>(null);
   const [stylePendingDelete, setStylePendingDelete] =
     useState<StyleConfig | null>(null);
+  const [stylePromptOptimizerId, setStylePromptOptimizerId] = useState<
+    string | null
+  >(null);
   const [draggedStyleId, setDraggedStyleId] = useState<string | null>(null);
   const draggedStyleIdRef = useRef<string | null>(null);
   const [styleDropTarget, setStyleDropTarget] = useState<{
@@ -1346,6 +1350,7 @@ function App() {
   function openSettings() {
     setSettingsTarget(defaultTarget);
     setSettingsLocale(locale);
+    setStylePromptOptimizerId(null);
     setSettingsOpen(true);
   }
 
@@ -2055,6 +2060,9 @@ function App() {
       .includes(normalizedProviderSearch);
   });
   const hasConfiguredProvider = providers.length > 0;
+  const stylePromptOptimizerTarget = styles.find(
+    (style) => style.id === stylePromptOptimizerId,
+  );
 
   if (settingsOpen) {
     const tabs: Array<{ value: SettingsTab; label: string }> = [
@@ -2074,7 +2082,10 @@ function App() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSettingsOpen(false)}
+              onClick={() => {
+                setStylePromptOptimizerId(null);
+                setSettingsOpen(false);
+              }}
               aria-label={t("backToTranslator")}
               className="h-auto shrink-0 gap-1 px-1 py-1 font-semibold"
             >
@@ -2666,7 +2677,34 @@ function App() {
                       </Button>
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>{t("stylePrompt")}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>{t("stylePrompt")}</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setStylePromptOptimizerId(style.id)
+                                  }
+                                  disabled={
+                                    style.providerId === null &&
+                                    defaultProviderId === null
+                                  }
+                                />
+                              }
+                            >
+                              <SparklesIcon />
+                              {t("styleOptimizeButton")}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("styleOptimizeTokenHint")}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Textarea
                         value={style.prompt}
                         placeholder={t("stylePromptPlaceholder")}
@@ -3183,6 +3221,22 @@ function App() {
             )}
           </section>
         </div>
+        <PromptOptimizerDialog
+          open={stylePromptOptimizerTarget !== undefined}
+          currentPrompt={stylePromptOptimizerTarget?.prompt ?? ""}
+          providerId={
+            stylePromptOptimizerTarget?.providerId ?? defaultProviderId
+          }
+          onOpenChange={(open) => {
+            if (!open) setStylePromptOptimizerId(null);
+          }}
+          onApply={(prompt) => {
+            if (stylePromptOptimizerTarget) {
+              updateStyle(stylePromptOptimizerTarget.id, "prompt", prompt);
+            }
+            setStylePromptOptimizerId(null);
+          }}
+        />
         <Dialog
           open={providerPendingDelete !== null}
           onOpenChange={(open) => {
