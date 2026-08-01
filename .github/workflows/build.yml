@@ -93,15 +93,17 @@ jobs:
           releaseBody: |
             Download installers for Windows, macOS, and Linux from the assets below.
 
-            | Platform | Packages |
-            |----------|----------|
-            | Windows | `.msi`, NSIS `.exe` |
-            | macOS | `.dmg` (Apple Silicon + Intel) |
-            | Linux | `.AppImage`, `.deb` |
+            | Platform | Architecture | Packages |
+            |----------|--------------|----------|
+            | Windows | x64 | `.msi`, NSIS `.exe` |
+            | macOS | Apple Silicon (aarch64) | `.dmg` |
+            | macOS | Intel (x64) | `.dmg` |
+            | Linux | x64 (amd64) | `.AppImage`, `.deb` |
           releaseDraft: true
           prerelease: false
           uploadUpdaterJson: false
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: trali-[platform]-[arch]-[bundle]
+          releaseAssetNamePattern: Trali-v[version]-[platform]-[arch][setup][ext]
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
