@@ -5,169 +5,166 @@
 <h1 align="center">Trali</h1>
 
 <p align="center">
-  一个轻量的桌面 AI 翻译工具。
+  A lightweight desktop AI translator and grammar checker with custom providers.
 </p>
 
 <p align="center">
-  Windows · macOS · Linux
+  <a href="./README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/StereoApp/trali/releases">Windows</a>
+  ·
+  <a href="https://github.com/StereoApp/trali/releases">macOS</a>
+  ·
+  <a href="https://github.com/StereoApp/trali/releases">Linux</a>
 </p>
 
 ---
 
-Trali 是我给自己做的一个小工具。
+## What it is
 
-平时看文档、写邮件或者回消息时，我只想按一下快捷键，输入内容，然后马上拿到翻译结果。我不想打开浏览器，也不想进入一个塞满聊天记录和复杂功能的 AI 工作台。
+Trali is a **lightweight desktop AI translator and writing assistant**. You bring your own model provider, pick a style, and get streaming results — without a bloated chat suite, accounts, or ads.
 
-所以有了 Trali：输入即翻译，结果会流式出现。用完关掉，它继续待在托盘里。
+It is built for everyday work: messages, email, and technical docs. Open it with a shortcut, type, get a result, close the window. It stays in the tray until you need it again.
 
-## 它能做什么
+---
 
-- 输入内容后自动翻译，不需要再点一次“发送”
-- 在翻译和语法检查之间快速切换
-- 保存常用语言对，一键切换源语言和目标语言
-- 直接交换原文与译文，不重复请求接口
-- 同时生成多个风格的译文，方便比较
-- 用术语表固定人名、产品名和专业词汇
-- 朗读译文（Windows / macOS）
-- 全局快捷键呼出、窗口置顶、关闭到托盘
-- 跟随系统深浅色，也可以自己选择主题色和圆角
+## Why I built it
 
-目前支持 English、简体中文、繁體中文、日本語、한국어、Español、Deutsch、Français、Português (Brasil) 和 Русский。
+In day-to-day work I talk to different people in different places: teammates, managers, external clients, and readers of technical docs. The same idea often needs a different voice — short IM replies, careful email, or precise documentation.
 
-## Key 放在哪里？
+I wanted a tool that could switch those styles freely. What I found instead were apps that were easy to dislike:
 
-这是我很在意的一件事。
+- Installers that balloon past 100MB and take forever to start
+- Expensive subscriptions in a world where AI tokens are already cheap
+- “Custom provider” support that is closed source — so I could not tell how my API key was stored
+- Style prompts that were hard or impossible to own
+- Ads, lock-in, or rough UI
 
-Trali 没有账号系统，也没有自己的 API 中转服务。你的 Key 只保存在本机的操作系统凭据库里，由系统负责加密和访问控制。
+I never found something that fit. So I built Trali.
 
-- Key 不会写进 `settings.toml`
-- 导出设置时不会带上 Key
-- Trali 不会把 Key 上传到自己的服务器
-- 请求会从你的电脑直接发给你配置的模型服务商
+---
 
-换句话说，Key 平时一直待在本地。只有真正调用模型时，它才会作为认证信息发送给对应的服务商。翻译内容如何被服务商处理，仍取决于该服务商自己的隐私政策。
+## Features
 
-## 开始使用
+1. **Extremely lightweight**  
+   No promotions, no account wall. The app starts quickly; translation speed is entirely up to the model you choose.
 
-第一次打开 Trali，需要先配置一个模型服务商：
+2. **A UI I am willing to look at**  
+   I am picky about interfaces. Trali is carefully polished, with options for theme, color, corner radius, shortcuts, close-to-tray, and more.
 
-1. 进入 **设置 → 服务商**
-2. 添加 OpenAI-compatible 或 Anthropic-compatible 服务商
-3. 填写 API 地址、模型和 Key
-4. 测试连接，并设为默认服务商
+3. **Terminology that stays consistent**  
+   Glossary support matters when you talk to clients. The same product name or concept should not become a different word every time.
 
-回到主界面输入文字，就可以开始翻译了。
+4. **Grammar and expression help**  
+   Beyond translation, there is a proofreading mode for when you are writing yourself and want grammar and phrasing suggestions.
 
-Trali 支持自定义 API 地址，所以可以连接官方接口，也可以连接兼容相应协议的服务。
+5. **Free-form styles**  
+   Define styles for different audiences — IM, email, technical writing, and anything else. AI can help refine a style prompt from a few clues and short questions.
 
-## 本地运行
+6. **Cross-platform, with portable settings**  
+   Windows, macOS, and Linux. Export and import settings and terminology so the same tool travels with you across machines. API keys stay on each device and are not included in exports.
 
-需要先安装：
+7. **API keys stay local**  
+   Keys are stored in the operating system credential store, encrypted by the OS. Trali does not upload them anywhere. Requests go from your machine to the provider you configure.
+
+**Also included:** streaming results, multiple styles in parallel, saved language pairs with quick swap, global shortcut and tray, text-to-speech on Windows and macOS, and UI languages including English, 简体中文, 繁體中文, 日本語, 한국어, Español, Deutsch, Français, Português (Brasil), and Русский.
+
+---
+
+## Download
+
+Installers are on **[GitHub Releases](https://github.com/StereoApp/trali/releases)**:
+
+| Platform | Packages |
+|----------|----------|
+| Windows | MSI, NSIS `.exe` |
+| macOS | Apple Silicon and Intel `.dmg` |
+| Linux | `.AppImage`, `.deb`, `.rpm` |
+
+You need your own API key and network access to the provider you choose.
+
+### First run
+
+1. Open **Settings → Providers**
+2. Add an **OpenAI-compatible** or **Anthropic-compatible** provider
+3. Fill in endpoint, model, and API key
+4. Test the connection and set it as default
+5. Type on the main screen to translate, or switch mode for proofreading
+
+Custom base URLs are supported, so official APIs and compatible gateways both work.
+
+---
+
+## Architecture
+
+Trali is a small desktop app: the UI is web tech; privileged work stays in Rust.
+
+```mermaid
+flowchart LR
+    UI["React UI"] -->|"Tauri commands"| Core["Rust core"]
+    Core --> Settings["Local settings & glossary"]
+    Core --> Keyring["OS credential store"]
+    Core -->|"HTTPS"| Provider["Your model provider"]
+```
+
+| Layer | Stack |
+|-------|--------|
+| Desktop shell | Tauri 2 |
+| Native core | Rust, Tokio, streaming HTTP |
+| UI | React 19, TypeScript, Vite, Tailwind CSS, Base UI / shadcn |
+| Config | TOML settings, CSV glossary |
+| Secrets | OS credential store (`keyring`) |
+
+The frontend never talks to providers with your key directly. Generation streams from Rust; several styles can run in parallel; when input changes, outdated requests are cancelled so stale text does not overwrite new results.
+
+---
+
+## Privacy & security
+
+- No Trali account and no Trali API relay
+- API keys live only in the OS credential store (e.g. Windows Credential Manager, macOS Keychain)
+- Keys are not written to `settings.toml`
+- Settings export never includes keys
+- Network traffic is from your device to the provider you configured
+- How that provider handles your text is still governed by their privacy policy
+
+---
+
+## Develop from source
+
+Requirements:
 
 - [Node.js](https://nodejs.org/) 20+
 - [pnpm](https://pnpm.io/)
 - [Rust stable](https://www.rust-lang.org/tools/install)
-- 对应平台的 [Tauri 2 前置依赖](https://v2.tauri.app/start/prerequisites/)
-
-然后执行：
+- Platform [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 ```powershell
 pnpm install
 pnpm tauri dev
 ```
 
-如果只想看前端界面：
+Frontend only (no tray, global shortcut, credential store, or system speech):
 
 ```powershell
 pnpm dev
 ```
 
-浏览器里没有系统凭据库、托盘、全局快捷键和系统语音等原生能力，完整功能请使用 `pnpm tauri dev`。
+Build the production frontend or desktop bundles with `pnpm build` and `pnpm tauri build`.
 
-## 技术实现
+---
 
-Trali 的界面使用 React，原生能力放在 Rust 里。前端不会直接读取 Key，也不会直接访问文件系统。
+## Community
 
-```mermaid
-flowchart LR
-    UI["React UI"] -->|"Tauri commands"| Core["Rust"]
-    Core --> Settings["本地设置与术语表"]
-    Core --> Keyring["操作系统凭据库"]
-    Core -->|"HTTPS"| Provider["你配置的模型服务商"]
-```
+Trali is primarily a tool for my own workflow, but I am happy if it helps others too.
 
-| 部分 | 使用的技术 |
-|---|---|
-| 桌面框架 | Tauri 2 |
-| 原生层 | Rust、Tokio、reqwest、keyring |
-| 前端 | React 19、TypeScript 5.8、Vite 8 |
-| UI | Tailwind CSS 4、Base UI、shadcn、Lucide |
-| 配置 | TOML |
-| 术语表 | CSV |
-| 包管理 | pnpm |
+- Open an issue if something is broken or missing
+- Pull requests are welcome — keep them focused and consistent with the existing code
+- If you like the project, a star is appreciated
 
-模型返回内容由 Rust 后端以流式事件发送给界面。多个翻译风格可以并行请求；输入发生变化时，旧请求会被取消，避免过时结果覆盖新内容。
-
-## 项目结构
-
-```text
-├── src/
-│   ├── components/        # 界面组件
-│   ├── lib/               # i18n、主题和 Tauri API 封装
-│   ├── App.tsx
-│   └── App.css
-├── src-tauri/
-│   ├── src/
-│   │   ├── commands.rs    # Tauri commands
-│   │   ├── generation.rs  # 流式生成
-│   │   ├── providers/     # OpenAI / Anthropic 协议适配
-│   │   ├── secrets.rs     # 系统凭据库
-│   │   ├── glossary.rs
-│   │   ├── settings.rs
-│   │   └── speech.rs
-│   └── tauri.conf.json
-└── package.json
-```
-
-## 构建与检查
-
-```powershell
-# 前端类型检查与生产构建
-pnpm build
-
-# 构建桌面安装包
-pnpm tauri build
-```
-
-Rust：
-
-```powershell
-cargo fmt --manifest-path src-tauri/Cargo.toml --check
-cargo check --manifest-path src-tauri/Cargo.toml
-cargo test --manifest-path src-tauri/Cargo.toml
-```
-
-仓库目前没有单独的前端 `test` 或 `lint` 脚本。
-
-## 数据与配置
-
-Trali 会在 Tauri 的应用配置目录中保存：
-
-- `settings.toml`：服务商、风格和界面偏好，不包含 API Key
-- `glossary.csv`：术语表
-- 操作系统凭据库条目：各服务商的 API Key
-
-设置和术语表使用原子写入，尽量避免程序意外退出时留下不完整文件。
-
-## 构建产物
-
-[GitHub Actions](./.github/workflows/build.yml) 会构建：
-
-- Windows x64：MSI、NSIS `.exe`
-- macOS：Apple Silicon 与 Intel `.dmg`
-- Linux x64：`.AppImage`、`.deb`
-
-推送 `v*` 标签会创建一个带安装包的 Draft Release。
+---
 
 应用更新使用 Tauri 官方 updater，并从 GitHub Release 的 `latest.json` 获取版本信息。首次启用发布更新前，需要生成一对 updater 签名密钥，将公钥保留在 `src-tauri/tauri.conf.json`，并把私钥内容保存为 GitHub 仓库 Secret：`TAURI_SIGNING_PRIVATE_KEY`。
 
@@ -179,6 +176,8 @@ pnpm tauri signer generate -w "$HOME/.tauri/trali.key"
 
 ## License
 
-仓库目前还没有 License 文件。
+[GNU General Public License v3.0](./LICENSE) (GPLv3).
 
-<sub>This project was developed with assistance from AI coding tools. All changes are reviewed and maintained by the project author.</sub>
+---
+
+<sub>Most of the implementation was produced with AI coding tools. Product concept, design decisions, and code review are done by the author.</sub>
