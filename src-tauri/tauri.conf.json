@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Trali",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "identifier": "com.aitranslator.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -32,7 +32,7 @@
       "msi",
       "nsis"
     ],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -44,6 +44,17 @@
       "nsis": {
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFFQzIyRkYyN0JCOTUyQjAKUldTd1VybDc4aS9DSGdhbWxLVXYvd1hrSmtWN3IyTnMxZ1hKS09tZTk5eURWdEhWRTRsVVM3MWEK",
+      "endpoints": [
+        "https://github.com/StereoApp/trali/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

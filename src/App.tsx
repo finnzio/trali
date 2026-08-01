@@ -14,12 +14,18 @@ import {
   register,
   unregisterAll,
 } from "@tauri-apps/plugin-global-shortcut";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import {
   disable as disableAutostart,
   enable as enableAutostart,
   isEnabled as isAutostartEnabled,
 } from "@tauri-apps/plugin-autostart";
+import { relaunch } from "@tauri-apps/plugin-process";
+import {
+  check as checkForUpdate,
+  type DownloadEvent,
+  type Update,
+} from "@tauri-apps/plugin-updater";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -28,7 +34,10 @@ import {
   CircleCheckIcon,
   CircleXIcon,
   CopyIcon,
+  ExternalLinkIcon,
   GripVerticalIcon,
+  HouseIcon,
+  InfoIcon,
   KeyRoundIcon,
   PlusIcon,
   PlugZapIcon,
@@ -107,7 +116,7 @@ import {
   downloadText,
   serializeGlossary,
 } from "@/lib/transfer";
-import { APP_NAME, APP_VERSION } from "@/lib/app-meta";
+import { APP_AUTHOR, APP_NAME, APP_VERSION } from "@/lib/app-meta";
 import {
   defaultLanguagePairs,
   formatLanguagePairLabel,
@@ -161,7 +170,10 @@ const SHORTCUT_KEY = "translator.toggleShortcut";
 const CLOSE_BEHAVIOR_KEY = "translator.closeBehavior";
 const ALWAYS_ON_TOP_KEY = "translator.alwaysOnTop";
 const WORK_MODE_KEY = "translator.workMode";
-const DEFAULT_TOGGLE_SHORTCUT = "CommandOrControl+Shift+Space";
+const SKIPPED_UPDATE_VERSION_KEY = "translator.skippedUpdateVersion";
+const TRALI_HOMEPAGE_URL = "https://trali.net";
+const TRALI_GITHUB_URL = "https://github.com/StereoApp/trali";
+const DEFAULT_TOGGLE_SHORTCUT = "";
 const TRANSLATION_DEBOUNCE_MS = 500;
 const MAIN_PANEL_MIN_HEIGHT = 128;
 const PANEL_DIVIDER_KEYBOARD_STEP = 16;
@@ -204,7 +216,45 @@ const sortedLanguages = [...languages].sort((a, b) =>
 function formatLanguageOption(code: string, name: string) {
   return `${name} · ${code}`;
 }
-type SettingsTab = "provider" | "styles" | "glossary" | "preferences";
+
+function GithubBrandIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.084-.729.084-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.809 1.304 3.495.997.108-.776.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.292-1.552 3.297-1.23 3.297-1.23.647 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.575C20.565 22.092 24 17.595 24 12.297c0-6.627-5.373-12-12-12" />
+    </svg>
+  );
+}
+
+async function openExternalUrl(url: string) {
+  try {
+    if (isTauri()) {
+      await openUrl(url);
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch {
+    // Keep the about page usable when the system browser is unavailable.
+  }
+}
+
+type SettingsTab =
+  | "provider"
+  | "styles"
+  | "glossary"
+  | "preferences"
+  | "about";
+type UpdateCheckState =
+  | "idle"
+  | "checking"
+  | "available"
+  | "up-to-date"
+  | "installing"
+  | "error";
 const radiusPresets: RadiusPreset[] = [
   "square",
   "compact",
@@ -666,10 +716,17 @@ function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(
     () => window.localStorage.getItem(ALWAYS_ON_TOP_KEY) === "true",
   );
+  const [autoCheckUpdates, setAutoCheckUpdates] = useState(true);
   const windowExpandedRef = useRef(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [autostartReady, setAutostartReady] = useState(false);
   const [autostartUpdating, setAutostartUpdating] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [updateCheckState, setUpdateCheckState] =
+    useState<UpdateCheckState>("idle");
+  const [updateProgress, setUpdateProgress] = useState<number | null>(null);
+  const updateCheckInFlightRef = useRef(false);
   const [backendReady, setBackendReady] = useState(false);
   const [generationResults, setGenerationResults] = useState<
     Record<string, GenerationResult>
@@ -833,6 +890,13 @@ function App() {
   }, [settingsOpen, settingsTab]);
 
   useEffect(() => {
+    if (!backendReady || !autoCheckUpdates || !isTauri()) return;
+    void checkForUpdates();
+    // The check should run when the persisted preference is ready or changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCheckUpdates, backendReady]);
+
+  useEffect(() => {
     if (!backendReady || !isTauri()) return;
     const timeout = window.setTimeout(() => {
       void saveBackendSettings(buildBackendSettings());
@@ -846,6 +910,7 @@ function App() {
     defaultTarget,
     languagePairs,
     locale,
+    autoCheckUpdates,
     providers,
     radius,
     selectedStyleIds,
@@ -976,13 +1041,14 @@ function App() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       void unregisterAll()
-        .then(() =>
-          register(toggleShortcut, (event) => {
+        .then(() => {
+          if (!toggleShortcut.trim()) return;
+          return register(toggleShortcut, (event) => {
             if (event.state === "Pressed") {
               void invoke("toggle_window");
             }
-          }),
-        )
+          });
+        })
         .catch(() => {
           // The browser preview does not expose Tauri's global shortcut API.
         });
@@ -1288,6 +1354,7 @@ function App() {
       defaultTargetLanguage: defaultTarget,
       closeBehavior,
       alwaysOnTop,
+      autoCheckUpdates,
       workMode,
       selectedStyleIds,
       defaultProviderId,
@@ -1341,6 +1408,7 @@ function App() {
     setTargetLanguage(nextTarget);
     setCloseBehavior(settings.closeBehavior === "quit" ? "quit" : "tray");
     setAlwaysOnTop(Boolean(settings.alwaysOnTop));
+    setAutoCheckUpdates(settings.autoCheckUpdates !== false);
     setWorkMode(
       settings.workMode === "proofread" ? "proofread" : "translate",
     );
@@ -1897,6 +1965,103 @@ function App() {
     setGenerationRefreshNonce((current) => current + 1);
   }
 
+  async function checkForUpdates(options?: {
+    openDialog?: boolean;
+    respectSkippedVersion?: boolean;
+  }) {
+    if (
+      !isTauri() ||
+      updateCheckState === "checking" ||
+      updateCheckState === "installing" ||
+      updateCheckInFlightRef.current
+    ) {
+      return;
+    }
+
+    const openDialog = options?.openDialog ?? false;
+    const respectSkippedVersion = options?.respectSkippedVersion ?? true;
+    updateCheckInFlightRef.current = true;
+    setUpdateCheckState("checking");
+    setUpdateProgress(null);
+
+    try {
+      const update = await checkForUpdate({ timeout: 30_000 });
+      if (!update) {
+        setAvailableUpdate(null);
+        setUpdateCheckState("up-to-date");
+        return;
+      }
+
+      const skippedVersion = window.localStorage.getItem(
+        SKIPPED_UPDATE_VERSION_KEY,
+      );
+      if (respectSkippedVersion && skippedVersion === update.version) {
+        await update.close().catch(() => {});
+        setAvailableUpdate(null);
+        setUpdateCheckState("idle");
+        return;
+      }
+
+      if (availableUpdate && availableUpdate !== update) {
+        await availableUpdate.close().catch(() => {});
+      }
+      setAvailableUpdate(update);
+      setUpdateCheckState("available");
+      if (openDialog) setUpdateDialogOpen(true);
+    } catch {
+      setUpdateCheckState("error");
+    } finally {
+      updateCheckInFlightRef.current = false;
+    }
+  }
+
+  async function installAvailableUpdate() {
+    if (!availableUpdate) return;
+
+    setUpdateCheckState("installing");
+    setUpdateProgress(0);
+    let downloadedBytes = 0;
+    let contentLength: number | null = null;
+
+    try {
+      await availableUpdate.downloadAndInstall((event: DownloadEvent) => {
+        if (event.event === "Started") {
+          contentLength = event.data.contentLength ?? null;
+          setUpdateProgress(contentLength === 0 ? 0 : null);
+          return;
+        }
+        if (event.event === "Progress") {
+          downloadedBytes += event.data.chunkLength;
+          if (contentLength && contentLength > 0) {
+            setUpdateProgress(
+              Math.min(100, Math.round((downloadedBytes / contentLength) * 100)),
+            );
+          }
+          return;
+        }
+        setUpdateProgress(100);
+      });
+      await relaunch();
+    } catch {
+      setUpdateCheckState("error");
+      setUpdateProgress(null);
+    }
+  }
+
+  async function skipAvailableUpdate() {
+    if (!availableUpdate) return;
+
+    window.localStorage.setItem(
+      SKIPPED_UPDATE_VERSION_KEY,
+      availableUpdate.version,
+    );
+    await availableUpdate.close().catch(() => {});
+    setAvailableUpdate(null);
+    setUpdateDialogOpen(false);
+    setUpdateCheckState("idle");
+    setUpdateProgress(null);
+  }
+
   async function updateAutostart(enabled: boolean) {
     if (!isTauri() || autostartUpdating) return;
     setAutostartUpdating(true);
@@ -2087,6 +2252,7 @@ function App() {
       { value: "styles", label: t("settingsTabStyles") },
       { value: "glossary", label: t("settingsTabGlossary") },
       { value: "preferences", label: t("settingsTabPreferences") },
+      { value: "about", label: t("settingsTabAbout") },
     ];
     const settingsTabIndex = tabs.findIndex(
       (tab) => tab.value === settingsTab,
@@ -2114,19 +2280,21 @@ function App() {
           </header>
 
           <div
-            className="relative mt-2 grid w-fit shrink-0 grid-cols-4 rounded-md bg-muted p-0.5"
+            className="relative mt-2 grid w-fit shrink-0 grid-cols-5 rounded-md bg-muted p-0.5"
             role="tablist"
             aria-label={t("settingsSections")}
           >
             <span
               aria-hidden
-              className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(25%-1px)] rounded-md bg-background shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${
+              className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(20%-1px)] rounded-md bg-background shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${
                 settingsTabIndex === 1
                   ? "translate-x-full"
                   : settingsTabIndex === 2
                     ? "translate-x-[200%]"
                     : settingsTabIndex === 3
                       ? "translate-x-[300%]"
+                      : settingsTabIndex === 4
+                        ? "translate-x-[400%]"
                       : "translate-x-0"
               }`}
             />
@@ -2960,34 +3128,55 @@ function App() {
                 <div className="order-6 grid grid-cols-[7rem_1fr] items-center gap-3">
                   <Label>{t("toggleShortcut")}</Label>
                   <div className="flex items-center justify-between gap-3 rounded-lg border px-2 py-1">
-                    <ShortcutKeys shortcut={toggleShortcut} />
-                    <Button
-                      variant={recordingShortcut ? "secondary" : "ghost"}
-                      size="sm"
-                      onClick={() => setRecordingShortcut(true)}
-                      onBlur={() => setRecordingShortcut(false)}
-                      onKeyDown={(event) => {
-                        if (!recordingShortcut) return;
-                        event.preventDefault();
-                        if (event.key === "Escape") {
+                    {toggleShortcut ? (
+                      <ShortcutKeys shortcut={toggleShortcut} />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        {t("shortcutNotSet")}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant={recordingShortcut ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setRecordingShortcut(true)}
+                        onBlur={() => setRecordingShortcut(false)}
+                        onKeyDown={(event) => {
+                          if (!recordingShortcut) return;
+                          event.preventDefault();
+                          if (event.key === "Escape") {
+                            setRecordingShortcut(false);
+                            return;
+                          }
+                          const value = shortcutFromKeyboardEvent(event);
+                          if (!value) return;
+                          setToggleShortcut(value);
                           setRecordingShortcut(false);
-                          return;
-                        }
-                        const value = shortcutFromKeyboardEvent(event);
-                        if (!value) return;
-                        setToggleShortcut(value);
-                        setRecordingShortcut(false);
-                      }}
-                    >
-                      {recordingShortcut ? (
-                        t("recordingShortcut")
-                      ) : (
-                        <>
-                          <PencilIcon />
-                          {t("editShortcut")}
-                        </>
-                      )}
-                    </Button>
+                        }}
+                      >
+                        {recordingShortcut ? (
+                          t("recordingShortcut")
+                        ) : (
+                          <>
+                            <PencilIcon />
+                            {t("editShortcut")}
+                          </>
+                        )}
+                      </Button>
+                      {toggleShortcut ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => {
+                            setToggleShortcut("");
+                            setRecordingShortcut(false);
+                          }}
+                          aria-label={t("clearShortcut")}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
@@ -3034,6 +3223,19 @@ function App() {
                 </div>
 
                 <div className="order-9 grid grid-cols-[7rem_1fr] items-center gap-3">
+                  <Label htmlFor="auto-check-updates">
+                    {t("autoCheckUpdates")}
+                  </Label>
+                  <div className="flex items-center">
+                    <Switch
+                      id="auto-check-updates"
+                      checked={autoCheckUpdates}
+                      onCheckedChange={setAutoCheckUpdates}
+                    />
+                  </div>
+                </div>
+
+                <div className="order-10 grid grid-cols-[7rem_1fr] items-center gap-3">
                   <Label>{t("settingsTransfer")}</Label>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={exportSettings}>
@@ -3056,6 +3258,130 @@ function App() {
                         event.currentTarget.value = "";
                       }}
                     />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {settingsTab === "about" && (
+              <div className="grid gap-6">
+                <div className="flex flex-col items-center gap-5 rounded-xl border bg-muted/20 px-5 py-8 text-center sm:flex-row sm:items-start sm:text-left">
+                  <img
+                    src="/trali.png"
+                    alt={APP_NAME}
+                    className="size-24 rounded-3xl shadow-lg ring-1 ring-foreground/10"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center justify-center gap-2 sm:justify-start">
+                      <InfoIcon className="size-4 text-primary" />
+                      <h2 className="font-semibold">{t("aboutTitle")}</h2>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {t("aboutDescription")}
+                    </p>
+                    <dl className="mt-4 grid gap-2 text-sm">
+                      <div className="flex justify-center gap-2 sm:justify-start">
+                        <dt className="text-muted-foreground">
+                          {t("appName")}
+                        </dt>
+                        <dd className="font-medium">{APP_NAME}</dd>
+                      </div>
+                      <div className="flex justify-center gap-2 sm:justify-start">
+                        <dt className="text-muted-foreground">
+                          {t("appVersion")}
+                        </dt>
+                        <dd className="font-medium tabular-nums">
+                          {APP_VERSION}
+                        </dd>
+                      </div>
+                      <div className="flex justify-center gap-2 sm:justify-start">
+                        <dt className="text-muted-foreground">
+                          {t("appAuthor")}
+                        </dt>
+                        <dd className="font-medium">{APP_AUTHOR}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void openExternalUrl(TRALI_HOMEPAGE_URL)}
+                      >
+                        <HouseIcon />
+                        {t("officialWebsite")}
+                        <ExternalLinkIcon className="size-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#24292f] text-white shadow-sm hover:bg-[#57606a] dark:bg-[#f0f6fc] dark:text-[#24292f] dark:hover:bg-white"
+                        onClick={() => void openExternalUrl(TRALI_GITHUB_URL)}
+                      >
+                        <GithubBrandIcon className="size-4" />
+                        GitHub
+                        <ExternalLinkIcon className="size-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+                  <div>
+                    <p className="font-medium">{t("updateTitle")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {availableUpdate
+                        ? t("updateAvailable", {
+                            version: availableUpdate.version,
+                          })
+                        : updateCheckState === "up-to-date"
+                          ? t("noUpdatesAvailable")
+                          : updateCheckState === "error"
+                            ? t("updateCheckFailed")
+                      : t("updateDescription")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {availableUpdate &&
+                    updateCheckState === "available" ? (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => void installAvailableUpdate()}
+                        >
+                          <RefreshCwIcon />
+                          {t("updateNow")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void skipAvailableUpdate()}
+                        >
+                          {t("skipThisVersion")}
+                        </Button>
+                      </>
+                    ) : null}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        void checkForUpdates({
+                          respectSkippedVersion: false,
+                        })
+                      }
+                      disabled={
+                        updateCheckState === "checking" ||
+                        updateCheckState === "installing"
+                      }
+                    >
+                      <RefreshCwIcon
+                        className={
+                          updateCheckState === "checking"
+                            ? "animate-spin"
+                            : undefined
+                        }
+                      />
+                      {updateCheckState === "checking"
+                        ? t("checkingForUpdates")
+                        : t("checkForUpdates")}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -3502,6 +3828,19 @@ function App() {
                   {APP_NAME} {APP_VERSION}
                 </Badge>
               </WindowDragRegion>
+              {availableUpdate && updateCheckState === "available" ? (
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  className="gap-1 rounded-full text-primary"
+                  onClick={() => setUpdateDialogOpen(true)}
+                >
+                  <RefreshCwIcon />
+                  {t("updateAvailableShort", {
+                    version: availableUpdate.version,
+                  })}
+                </Button>
+              ) : null}
               <div className="flex shrink-0 items-center gap-1">
                 <TooltipProvider>
                   <Tooltip>
@@ -3925,6 +4264,79 @@ function App() {
             />
           )}
         </section>
+
+        <Dialog
+          open={updateDialogOpen}
+          onOpenChange={(open) => {
+            if (updateCheckState !== "installing") {
+              setUpdateDialogOpen(open);
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("updateTitle")}</DialogTitle>
+              <DialogDescription>
+                {availableUpdate
+                  ? t("updateAvailable", {
+                      version: availableUpdate.version,
+                    })
+                  : t("updateDescription")}
+              </DialogDescription>
+            </DialogHeader>
+
+            {availableUpdate?.body ? (
+              <div className="max-h-48 overflow-y-auto rounded-lg bg-muted/50 p-3 text-sm whitespace-pre-wrap">
+                {availableUpdate.body}
+              </div>
+            ) : null}
+
+            {updateCheckState === "installing" ? (
+              <p className="text-sm text-muted-foreground">
+                {updateProgress === null
+                  ? t("downloadingUpdate")
+                  : t("downloadingUpdateProgress", {
+                      progress: String(updateProgress),
+                    })}
+              </p>
+            ) : null}
+
+            {updateCheckState === "error" ? (
+              <p className="text-sm text-destructive">
+                {t("updateCheckFailed")}
+              </p>
+            ) : null}
+
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={() => void skipAvailableUpdate()}
+                disabled={
+                  !availableUpdate || updateCheckState === "installing"
+                }
+              >
+                {t("skipThisVersion")}
+              </Button>
+              <Button
+                onClick={() => void installAvailableUpdate()}
+                disabled={
+                  !availableUpdate || updateCheckState === "installing"
+                }
+              >
+                <RefreshCwIcon
+                  className={
+                    updateCheckState === "installing"
+                      ? "animate-spin"
+                      : undefined
+                  }
+                />
+                {updateCheckState === "installing"
+                  ? t("updatingApp")
+                  : t("updateNow")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </main>

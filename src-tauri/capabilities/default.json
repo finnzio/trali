@@ -12,6 +12,8 @@
     "core:window:allow-is-maximized",
     "core:window:allow-start-dragging",
     "opener:default",
+    "process:default",
+    "updater:default",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",

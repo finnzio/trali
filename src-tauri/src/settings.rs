@@ -54,7 +54,7 @@ fn default_radius() -> String {
 }
 
 fn default_shortcut() -> String {
-    "CommandOrControl+Shift+Space".into()
+    String::new()
 }
 
 fn default_target_language() -> String {
@@ -63,6 +63,10 @@ fn default_target_language() -> String {
 
 fn default_close_behavior() -> String {
     "tray".into()
+}
+
+fn default_auto_check_updates() -> bool {
+    true
 }
 
 fn default_work_mode() -> String {
@@ -126,6 +130,8 @@ pub struct AppSettings {
     pub close_behavior: String,
     #[serde(default)]
     pub always_on_top: bool,
+    #[serde(default = "default_auto_check_updates")]
+    pub auto_check_updates: bool,
     #[serde(default = "default_work_mode")]
     pub work_mode: String,
     #[serde(default = "default_selected_styles")]
@@ -153,6 +159,7 @@ impl Default for AppSettings {
             default_target_language: default_target_language(),
             close_behavior: default_close_behavior(),
             always_on_top: false,
+            auto_check_updates: default_auto_check_updates(),
             work_mode: default_work_mode(),
             selected_style_ids: default_selected_styles(),
             default_provider_id: None,

@@ -1,8 +1,8 @@
 [package]
 name = "trali"
-version = "0.1.1"
+version = "0.1.2"
 description = "Trali desktop translator"
-authors = ["you"]
+authors = ["StereoApp"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -53,3 +53,5 @@ windows = { version = "0.61", features = [
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
