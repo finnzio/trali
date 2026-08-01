@@ -195,6 +195,9 @@ const zhCN = {
   translateMode: "翻译",
   mountGlossary: "应用术语",
   addGlossaryTerm: "在{settings}中添加术语后开启",
+  transcreation: "创译",
+  transcreationTooltip:
+    "开启后，翻译模型可结合当前风格和场景进行适度改写，不必完全遵照原文，以获得更符合设定的表达。",
   proofreadMode: "润色",
   writingSuggestions: "修改建议",
   proofreadPreview: "建议",
@@ -446,6 +449,9 @@ const en: Messages = {
   translateMode: "Translate",
   mountGlossary: "Apply glossary",
   addGlossaryTerm: "Add terms in {settings} to enable",
+  transcreation: "Transcreation",
+  transcreationTooltip:
+    "Allows the translation model to make measured rewrites based on the current style and scene instead of following the source wording literally.",
   proofreadMode: "Polish",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
@@ -689,6 +695,9 @@ const zhTW: Messages = {
   translateMode: "翻譯",
   mountGlossary: "套用術語集",
   addGlossaryTerm: "請先在{settings}中新增術語，再開啟",
+  transcreation: "創譯",
+  transcreationTooltip:
+    "開啟後，翻譯模型可結合目前風格與情境進行適度改寫，不必完全遵循原文，以獲得更符合設定的表達。",
   proofreadMode: "潤色",
   writingSuggestions: "修改建議",
   proofreadPreview: "建議",
@@ -935,6 +944,9 @@ const ja: Messages = {
   translateMode: "翻訳",
   mountGlossary: "用語集を適用",
   addGlossaryTerm: "{settings}で用語を追加すると有効になります",
+  transcreation: "トランスクリエーション",
+  transcreationTooltip:
+    "有効にすると、翻訳モデルが現在のスタイルや場面に合わせて、原文を逐語的に追わず適度に表現を調整できます。",
   proofreadMode: "推敲",
   writingSuggestions: "修正提案",
   proofreadPreview: "提案",
@@ -1184,6 +1196,9 @@ const ko: Messages = {
   translateMode: "번역",
   mountGlossary: "용어집 적용",
   addGlossaryTerm: "{settings}에서 용어를 추가한 후 사용하세요",
+  transcreation: "트랜스크리에이션",
+  transcreationTooltip:
+    "켜면 번역 모델이 현재 스타일과 상황에 맞게 원문의 표현을 그대로 따르지 않고 적절히 다듬을 수 있습니다.",
   proofreadMode: "윤색",
   writingSuggestions: "수정 제안",
   proofreadPreview: "제안",
@@ -1438,6 +1453,9 @@ const es: Messages = {
   translateMode: "Traducir",
   mountGlossary: "Aplicar glosario",
   addGlossaryTerm: "Añade términos en {settings} para activarlo",
+  transcreation: "Transcreación",
+  transcreationTooltip:
+    "Permite que el modelo adapte moderadamente la expresión al estilo y la situación actuales, sin seguir literalmente el texto original.",
   proofreadMode: "Pulir",
   writingSuggestions: "Sugerencias",
   proofreadPreview: "Sugerencias",
@@ -1698,6 +1716,9 @@ const de: Messages = {
   translateMode: "Übersetzen",
   mountGlossary: "Glossar anwenden",
   addGlossaryTerm: "Zum Aktivieren Begriffe in den {settings} hinzufügen",
+  transcreation: "Transkreation",
+  transcreationTooltip:
+    "Erlaubt dem Übersetzungsmodell, die Formulierung passend zum aktuellen Stil und Kontext moderat anzupassen, statt dem Original wörtlich zu folgen.",
   proofreadMode: "Feinschliff",
   writingSuggestions: "Vorschläge",
   proofreadPreview: "Vorschläge",
@@ -1958,6 +1979,9 @@ const fr: Messages = {
   translateMode: "Traduire",
   mountGlossary: "Appliquer le glossaire",
   addGlossaryTerm: "Ajoutez des termes dans les {settings} pour activer",
+  transcreation: "Transcréation",
+  transcreationTooltip:
+    "Permet au modèle d’adapter modérément la formulation au style et au contexte actuels, sans suivre littéralement le texte source.",
   proofreadMode: "Peaufiner",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
@@ -2217,6 +2241,9 @@ const ptBR: Messages = {
   translateMode: "Traduzir",
   mountGlossary: "Aplicar glossário",
   addGlossaryTerm: "Adicione termos nas {settings} para ativar",
+  transcreation: "Transcriação",
+  transcreationTooltip:
+    "Permite que o modelo adapte moderadamente a formulação ao estilo e ao contexto atuais, sem seguir literalmente o texto original.",
   proofreadMode: "Polir",
   writingSuggestions: "Sugestões",
   proofreadPreview: "Sugestões",
@@ -2475,6 +2502,9 @@ const ru: Messages = {
   translateMode: "Перевод",
   mountGlossary: "Применить глоссарий",
   addGlossaryTerm: "Добавьте термины в {settings}, чтобы включить",
+  transcreation: "Транскреация",
+  transcreationTooltip:
+    "Позволяет модели умеренно адаптировать формулировки под текущий стиль и контекст, не следуя исходному тексту буквально.",
   proofreadMode: "Редактура",
   writingSuggestions: "Предложения",
   proofreadPreview: "Предложения",

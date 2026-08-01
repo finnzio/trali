@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
+const IS_MACOS = /Macintosh|Mac OS X/u.test(navigator.userAgent);
+
 /** Flex spacer / chrome strip that is a native window drag region in Tauri. */
 export function WindowDragRegion({
   className,
@@ -14,7 +16,7 @@ export function WindowDragRegion({
   className?: string;
   children?: ReactNode;
 }) {
-  if (!isTauri()) {
+  if (!isTauri() || IS_MACOS) {
     return (
       <div
         className={cn("min-h-8 min-w-0 flex-1 select-none", className)}
@@ -42,7 +44,7 @@ export function WindowControls({ className }: { className?: string }) {
   const [maximized, setMaximized] = useState(false);
 
   useEffect(() => {
-    if (!isTauri()) return;
+    if (!isTauri() || IS_MACOS) return;
 
     const appWindow = getCurrentWindow();
     let unlisten: (() => void) | undefined;
@@ -72,7 +74,7 @@ export function WindowControls({ className }: { className?: string }) {
     };
   }, []);
 
-  if (!isTauri()) return null;
+  if (!isTauri() || IS_MACOS) return null;
 
   const appWindow = getCurrentWindow();
 

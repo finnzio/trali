@@ -1,0 +1,21 @@
+{
+  "$schema": "./gen/schemas/desktop-schema.json",
+  "app": {
+    "windows": [
+      {
+        "title": "Trali",
+        "width": 800,
+        "height": 600,
+        "decorations": true,
+        "shadow": true,
+        "titleBarStyle": "Visible"
+      }
+    ]
+  },
+  "bundle": {
+    "targets": [
+      "app",
+      "dmg"
+    ]
+  }
+}

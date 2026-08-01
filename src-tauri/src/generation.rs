@@ -18,6 +18,8 @@ use crate::{
 pub struct GenerationVariant {
     pub id: String,
     pub style_id: Option<String>,
+    #[serde(default)]
+    pub transcreation: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -138,6 +140,7 @@ pub async fn generate(
                     &request.response_language,
                     style.as_ref(),
                     request.include_glossary,
+                    variant.transcreation,
                     &glossary,
                 ) {
                     Ok(prompt) => prompt,
