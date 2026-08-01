@@ -284,6 +284,35 @@
     stroke-dasharray: 18 39;
 }
 
+.swap-easter-egg-emoji {
+    display: inline-block;
+    transform-origin: 70% 80%;
+    animation: swap-easter-egg-wave 850ms ease-in-out 1;
+}
+
+@keyframes swap-easter-egg-wave {
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(18deg);
+    }
+
+    40% {
+        transform: rotate(-14deg);
+    }
+
+    60% {
+        transform: rotate(18deg);
+    }
+
+    80% {
+        transform: rotate(-8deg);
+    }
+}
+
 @keyframes transfer-status-flow {
     to {
         stroke-dashoffset: -57;
@@ -335,6 +364,10 @@
     }
 
     .transfer-status-icon-path {
+        animation: none;
+    }
+
+    .swap-easter-egg-emoji {
         animation: none;
     }
 }
