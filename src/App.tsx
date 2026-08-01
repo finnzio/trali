@@ -127,13 +127,9 @@ import {
   type StyleConfig,
 } from "@/lib/backend";
 import {
-  getProviderPreset,
-  providerPresets,
-} from "@/lib/provider-presets";
-import {
-  loadModelsDevModels,
+  loadModelsDevProviders,
   type ModelOption,
-  type ModelsDevModelMap,
+  type ModelsDevProvider,
 } from "@/lib/models-dev";
 import "./App.css";
 
@@ -479,7 +475,10 @@ function App() {
   const [providerModels, setProviderModels] = useState<
     Record<string, ModelOption[]>
   >({});
-  const [modelsDevModels, setModelsDevModels] = useState<ModelsDevModelMap>({});
+  const [modelsDevProviders, setModelsDevProviders] = useState<
+    ModelsDevProvider[]
+  >([]);
+  const [providerSearch, setProviderSearch] = useState("");
   const [modelsDevLoading, setModelsDevLoading] = useState(false);
   const [testingProviderId, setTestingProviderId] = useState<string | null>(
     null,
@@ -656,10 +655,11 @@ function App() {
     if (!settingsOpen || settingsTab !== "provider") return;
 
     let cancelled = false;
+    setProviderSearch("");
     setModelsDevLoading(true);
-    void loadModelsDevModels()
-      .then((models) => {
-        if (!cancelled) setModelsDevModels(models);
+    void loadModelsDevProviders()
+      .then((providers) => {
+        if (!cancelled) setModelsDevProviders(providers);
       })
       .catch(() => {
         // The provider's own /models endpoint remains available as a fallback.
@@ -1154,9 +1154,19 @@ function App() {
     if (!defaultProviderId) setDefaultProviderId(id);
   }
 
-  function applyProviderPreset(providerId: string, presetId: string) {
-    const preset = providerPresets.find((item) => item.id === presetId);
-    if (!preset) return;
+  function getModelsDevProvider(provider: ProviderConfig) {
+    return modelsDevProviders.find(
+      (candidate) =>
+        candidate.name === provider.name &&
+        candidate.endpoint === provider.endpoint,
+    );
+  }
+
+  function applyModelsDevProvider(providerId: string, providerCatalogId: string) {
+    const catalogProvider = modelsDevProviders.find(
+      (provider) => provider.id === providerCatalogId,
+    );
+    if (!catalogProvider) return;
 
     setProviderConnectionStatus((current) => {
       const next = { ...current };
@@ -1173,13 +1183,14 @@ function App() {
         provider.id === providerId
           ? {
               ...provider,
-              name: preset.name,
-              type: preset.type,
-              endpoint: preset.endpoint,
+              name: catalogProvider.name,
+              type: catalogProvider.type,
+              endpoint: catalogProvider.endpoint,
             }
           : provider,
       ),
     );
+    setProviderSearch("");
   }
 
   function updateProvider(
@@ -1440,8 +1451,7 @@ function App() {
     const fetchedModels = providerModels[provider.id];
     if (fetchedModels) return fetchedModels;
 
-    const preset = getProviderPreset(provider);
-    return preset ? modelsDevModels[preset.id] : undefined;
+    return getModelsDevProvider(provider)?.models;
   }
 
   async function commitProviderApiKey(providerId: string) {
@@ -1811,6 +1821,14 @@ function App() {
     );
   }
 
+  const normalizedProviderSearch = providerSearch.trim().toLocaleLowerCase();
+  const filteredModelsDevProviders = modelsDevProviders.filter((provider) => {
+    if (!normalizedProviderSearch) return true;
+    return `${provider.name} ${provider.id}`
+      .toLocaleLowerCase()
+      .includes(normalizedProviderSearch);
+  });
+
   if (settingsOpen) {
     const tabs: Array<{ value: SettingsTab; label: string }> = [
       { value: "provider", label: t("settingsTabProvider") },
@@ -1824,7 +1842,7 @@ function App() {
 
     return (
       <main className="flex h-svh flex-col overflow-hidden bg-muted/30">
-        <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-3 py-2 sm:px-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col px-3 py-2 sm:px-4">
           <header className="flex shrink-0 items-center gap-2">
             <Button
               variant="ghost"
@@ -2003,27 +2021,49 @@ function App() {
                       <div className="grid gap-1.5 sm:col-span-2">
                         <Label>{t("providerPreset")}</Label>
                         <Select
-                          value={getProviderPreset(provider)?.id ?? "custom"}
+                          value={getModelsDevProvider(provider)?.id ?? "custom"}
                           onValueChange={(value) =>
-                            applyProviderPreset(provider.id, String(value))
+                            applyModelsDevProvider(provider.id, String(value))
                           }
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue>
-                              {getProviderPreset(provider)?.name ??
+                              {getModelsDevProvider(provider)?.name ??
                                 t("providerCustom")}
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent align="start">
+                          <SelectContent align="start" alignItemWithTrigger={false}>
+                            <Input
+                              value={providerSearch}
+                              placeholder={t("providerSearch")}
+                              aria-label={t("providerSearch")}
+                              className="mx-1 mb-1 w-[calc(100%-0.5rem)]"
+                              onPointerDown={(event) =>
+                                event.stopPropagation()
+                              }
+                              onKeyDown={(event) => event.stopPropagation()}
+                              onChange={(event) =>
+                                setProviderSearch(event.currentTarget.value)
+                              }
+                            />
                             <SelectItem value="custom">
                               {t("providerCustom")}
                             </SelectItem>
                             <SelectSeparator />
-                            {providerPresets.map((preset) => (
-                              <SelectItem key={preset.id} value={preset.id}>
-                                {preset.name}
+                            {filteredModelsDevProviders.map((catalogProvider) => (
+                              <SelectItem
+                                key={catalogProvider.id}
+                                value={catalogProvider.id}
+                              >
+                                {catalogProvider.name}
                               </SelectItem>
                             ))}
+                            {!modelsDevLoading &&
+                              filteredModelsDevProviders.length === 0 && (
+                                <div className="px-1.5 py-2 text-sm text-muted-foreground">
+                                  {t("providerNoMatches")}
+                                </div>
+                              )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -2419,7 +2459,7 @@ function App() {
             )}
 
             {settingsTab === "preferences" && (
-              <div className="grid max-w-xl gap-3">
+              <div className="grid w-full gap-3">
                 <div className="order-1 grid grid-cols-[7rem_1fr] items-center gap-3">
                   <Label>{t("interfaceLanguage")}</Label>
                   <Select

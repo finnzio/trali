@@ -1,6 +1,12 @@
+import type { ProviderType } from "@/lib/backend";
+
 const MODELS_DEV_API_URL = "https://models.dev/api.json";
 
-type ModelsDevProvider = {
+type RawModelsDevProvider = {
+  id?: unknown;
+  name?: unknown;
+  api?: unknown;
+  npm?: unknown;
   models?: Record<string, unknown>;
 };
 
@@ -9,21 +15,12 @@ export type ModelOption = {
   name: string;
 };
 
-export type ModelsDevModelMap = Record<string, ModelOption[]>;
-
-const providerIdsByPresetId: Record<string, readonly string[]> = {
-  openai: ["openai"],
-  anthropic: ["anthropic"],
-  "google-gemini": ["google"],
-  xai: ["xai"],
-  groq: ["groq"],
-  mistral: ["mistral"],
-  deepseek: ["deepseek"],
-  qwen: ["alibaba-cn", "alibaba"],
-  moonshot: ["moonshotai-cn", "moonshotai"],
-  zhipu: ["zhipuai"],
-  siliconflow: ["siliconflow-cn", "siliconflow"],
-  minimax: ["minimax-cn", "minimax"],
+export type ModelsDevProvider = {
+  id: string;
+  name: string;
+  endpoint: string;
+  type: ProviderType;
+  models: ModelOption[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -31,7 +28,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function readString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value : undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 function isTextModel(value: Record<string, unknown>) {
@@ -45,7 +42,7 @@ function isTextModel(value: Record<string, unknown>) {
   return output.length === 0 || output.includes("text");
 }
 
-function parseModels(provider: ModelsDevProvider): ModelOption[] {
+function parseModels(provider: RawModelsDevProvider): ModelOption[] {
   if (!isRecord(provider.models)) return [];
 
   const models = new Map<string, ModelOption>();
@@ -61,28 +58,56 @@ function parseModels(provider: ModelsDevProvider): ModelOption[] {
   );
 }
 
-function parseModelsDevCatalog(payload: unknown): ModelsDevModelMap {
-  if (!isRecord(payload)) return {};
-
-  const result: ModelsDevModelMap = {};
-  for (const [presetId, providerIds] of Object.entries(providerIdsByPresetId)) {
-    for (const providerId of providerIds) {
-      const provider = payload[providerId];
-      if (!isRecord(provider)) continue;
-
-      const models = parseModels(provider);
-      if (models.length > 0) {
-        result[presetId] = models;
-        break;
-      }
-    }
-  }
-  return result;
+function inferProviderType(
+  providerId: string,
+  provider: RawModelsDevProvider,
+): ProviderType {
+  const npm = readString(provider.npm)?.toLowerCase() ?? "";
+  return providerId.includes("anthropic") || npm.includes("anthropic")
+    ? "anthropic-compatible"
+    : "openai-compatible";
 }
 
-let modelsDevPromise: Promise<ModelsDevModelMap> | null = null;
+function isUsableEndpoint(endpoint: string) {
+  return (
+    (endpoint.startsWith("https://") || endpoint.startsWith("http://")) &&
+    !endpoint.includes("${")
+  );
+}
 
-export function loadModelsDevModels() {
+function parseModelsDevCatalog(payload: unknown): ModelsDevProvider[] {
+  if (!isRecord(payload)) return [];
+
+  return Object.entries(payload)
+    .flatMap(([providerKey, rawProvider]) => {
+      if (!isRecord(rawProvider)) return [];
+
+      const provider = rawProvider as RawModelsDevProvider;
+      const models = parseModels(provider);
+      const endpoint = readString(provider.api);
+      if (models.length === 0 || !endpoint || !isUsableEndpoint(endpoint)) {
+        return [];
+      }
+
+      const id = readString(provider.id) ?? providerKey;
+      return [
+        {
+          id,
+          name: readString(provider.name) ?? id,
+          endpoint,
+          type: inferProviderType(id, provider),
+          models,
+        },
+      ];
+    })
+    .sort((left, right) =>
+      left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
+    );
+}
+
+let modelsDevPromise: Promise<ModelsDevProvider[]> | null = null;
+
+export function loadModelsDevProviders() {
   modelsDevPromise ??= fetch(MODELS_DEV_API_URL)
     .then((response) => {
       if (!response.ok) {
