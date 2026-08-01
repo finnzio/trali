@@ -13,6 +13,7 @@ use crate::{
     error::{AppError, AppResult},
     generation::{GenerationEvent, GenerationRequest},
     glossary::{GlossaryData, GlossaryStore},
+    prompt_optimizer::{PromptOptimizationRequest, PromptOptimizationResponse},
     providers,
     settings::{AppSettings, SettingsStore},
     speech::{SpeechCapabilities, SpeechManager, SpeechRequest},
@@ -240,6 +241,14 @@ pub async fn cancel_generation(
 ) -> AppResult<()> {
     crate::generation::cancel(&state, &request_id).await;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn optimize_style_prompt(
+    state: State<'_, BackendState>,
+    request: PromptOptimizationRequest,
+) -> AppResult<PromptOptimizationResponse> {
+    crate::prompt_optimizer::optimize(&state, request).await
 }
 
 #[tauri::command]

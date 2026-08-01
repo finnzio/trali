@@ -84,6 +84,26 @@ const zhCN = {
   backToTranslator: "返回翻译",
   providerTitle: "服务商",
   providerDescription: "配置用于翻译的模型服务和连接方式。",
+  providerSetupEyebrow: "还差一步",
+  providerSetupTitle: "先连接一个模型服务商",
+  providerSetupDescription:
+    "Trali 负责文本编辑、任务管理和结果整理；真正生成翻译或语法建议，需要通过你选择的模型服务商完成。",
+  providerSetupAction: "配置第一个服务商",
+  providerSetupSecureNote:
+    "API Key 使用系统安全存储，不会写入普通设置文件。",
+  providerSetupWhyTitle: "如何获取",
+  providerSetupWhyDescription:
+    "选择支持 OpenAI-compatible 或 Anthropic-compatible API 的服务商，在其官网注册并创建 API Key，然后将端点、密钥和模型填写到设置中。",
+  providerSetupStepsTitle: "配置步骤",
+  providerSetupStep1Title: "选择服务商",
+  providerSetupStep1Description:
+    "选择支持 OpenAI-compatible 或 Anthropic-compatible API 的平台。",
+  providerSetupStep2Title: "获取 API Key",
+  providerSetupStep2Description:
+    "在服务商官网注册账号，创建 API Key，并确认账户有可用额度。",
+  providerSetupStep3Title: "填写连接信息",
+  providerSetupStep3Description:
+    "回到设置 → 服务商，选择预设或填写端点、API Key 和模型名，然后测试连接。",
   addProvider: "添加服务商",
   providerEmpty: "还没有服务商，点击右上角添加。",
   providerDefaultName: "服务商",
@@ -140,6 +160,30 @@ const zhCN = {
   styleName: "名称",
   stylePrompt: "提示词",
   stylePromptPlaceholder: "输入应用此风格时使用的提示词",
+  styleOptimizeButton: "AI 优化",
+  styleOptimizeTokenHint: "AI 优化会额外消耗一些 Token",
+  styleOptimizeNoProvider: "请先配置模型服务商。",
+  styleOptimizeDialogTitle: "优化提示词",
+  styleOptimizeDialogDescription:
+    "回答几个简短问题，AI 会逐步完善这条风格提示词。",
+  styleOptimizeRound: "第 {round} 轮",
+  styleOptimizeAnswerCount: "已完成 {count} 轮",
+  styleOptimizeProgress: "提示词优化进度",
+  styleOptimizeCurrentPrompt: "当前提示词",
+  styleOptimizeNoExistingPrompt: "还没有提示词，AI 会从你的偏好开始构建。",
+  styleOptimizeCustomAnswer: "自定义回答",
+  styleOptimizeCustomPlaceholder: "输入你的答案…",
+  styleOptimizeContinue: "继续",
+  styleOptimizeFinalTitle: "优化完成",
+  styleOptimizeFinalDescription:
+    "这是根据你的回答生成的提示词，可以直接应用或继续修改。",
+  styleOptimizeRestart: "重新优化",
+  styleOptimizeApply: "应用提示词",
+  styleOptimizeErrorDescription:
+    "暂时无法完成优化，请检查模型服务商设置后重试。",
+  styleOptimizeRetry: "重试",
+  styleOptimizeGenerating: "AI 正在思考",
+  styleOptimizeGeneratingDescription: "正在根据回答整理下一个问题",
   styleProvider: "服务商",
   inheritDefaultProvider: "默认服务商",
   selectStyles: "选择风格",
@@ -260,6 +304,26 @@ const en: Messages = {
   providerTitle: "Providers",
   providerDescription:
     "Configure the model services and connections used for translation.",
+  providerSetupEyebrow: "One connection to go",
+  providerSetupTitle: "Connect a model provider to begin",
+  providerSetupDescription:
+    "Trali handles your workspace, prompts, and results. A model provider is what turns your text into translations or proofreading suggestions.",
+  providerSetupAction: "Configure your first provider",
+  providerSetupSecureNote:
+    "Your API key is stored in the system credential store, separate from ordinary settings.",
+  providerSetupWhyTitle: "How to get a provider",
+  providerSetupWhyDescription:
+    "Choose a service with an OpenAI-compatible or Anthropic-compatible API, create an account and API key on its website, then add the endpoint, key, and model in Settings.",
+  providerSetupStepsTitle: "Setup steps",
+  providerSetupStep1Title: "Choose a provider",
+  providerSetupStep1Description:
+    "Pick a service that supports an OpenAI-compatible or Anthropic-compatible API.",
+  providerSetupStep2Title: "Get an API key",
+  providerSetupStep2Description:
+    "Create an account on the provider's website, generate an API key, and make sure the account has available credit.",
+  providerSetupStep3Title: "Add the connection",
+  providerSetupStep3Description:
+    "Return to Settings → Providers, choose a preset or enter the endpoint, API key, and model, then test the connection.",
   addProvider: "Add provider",
   providerEmpty: "No providers yet. Add one to get started.",
   providerDefaultName: "Provider",
@@ -319,6 +383,32 @@ const en: Messages = {
   styleName: "Name",
   stylePrompt: "Prompt",
   stylePromptPlaceholder: "Enter the prompt used for this style",
+  styleOptimizeButton: "Optimize with AI",
+  styleOptimizeTokenHint: "AI optimization uses some extra tokens",
+  styleOptimizeNoProvider: "Configure a model provider first.",
+  styleOptimizeDialogTitle: "Optimize prompt",
+  styleOptimizeDialogDescription:
+    "Answer a few quick questions and AI will refine this style prompt step by step.",
+  styleOptimizeRound: "Round {round}",
+  styleOptimizeAnswerCount: "{count} rounds completed",
+  styleOptimizeProgress: "Prompt optimization progress",
+  styleOptimizeCurrentPrompt: "Current prompt",
+  styleOptimizeNoExistingPrompt:
+    "No prompt yet. AI will start by learning your preferences.",
+  styleOptimizeCustomAnswer: "Custom answer",
+  styleOptimizeCustomPlaceholder: "Type your answer…",
+  styleOptimizeContinue: "Continue",
+  styleOptimizeFinalTitle: "Prompt optimized",
+  styleOptimizeFinalDescription:
+    "Here is the prompt generated from your answers. Apply it as-is or edit it first.",
+  styleOptimizeRestart: "Start over",
+  styleOptimizeApply: "Apply prompt",
+  styleOptimizeErrorDescription:
+    "The prompt could not be optimized right now. Check your provider settings and try again.",
+  styleOptimizeRetry: "Try again",
+  styleOptimizeGenerating: "AI is thinking",
+  styleOptimizeGeneratingDescription:
+    "Preparing the next question from your answers…",
   styleProvider: "Provider",
   inheritDefaultProvider: "Default provider",
   selectStyles: "Select styles",
@@ -438,6 +528,26 @@ const zhTW: Messages = {
   backToTranslator: "返回翻譯",
   providerTitle: "服務商",
   providerDescription: "設定用於翻譯的模型服務與連線方式。",
+  providerSetupEyebrow: "還差一步",
+  providerSetupTitle: "先連接一個模型服務商",
+  providerSetupDescription:
+    "Trali 負責文字編輯、任務管理與結果整理；真正產生翻譯或文法建議，需要透過你選擇的模型服務商完成。",
+  providerSetupAction: "設定第一個服務商",
+  providerSetupSecureNote:
+    "API 金鑰會使用系統安全儲存，不會寫入一般設定檔。",
+  providerSetupWhyTitle: "如何取得",
+  providerSetupWhyDescription:
+    "選擇支援 OpenAI-compatible 或 Anthropic-compatible API 的服務商，在其官網註冊並建立 API 金鑰，然後將端點、金鑰與模型填入設定。",
+  providerSetupStepsTitle: "設定步驟",
+  providerSetupStep1Title: "選擇服務商",
+  providerSetupStep1Description:
+    "選擇支援 OpenAI-compatible 或 Anthropic-compatible API 的平台。",
+  providerSetupStep2Title: "取得 API 金鑰",
+  providerSetupStep2Description:
+    "在服務商官網註冊帳號、建立 API 金鑰，並確認帳戶有可用額度。",
+  providerSetupStep3Title: "填寫連線資訊",
+  providerSetupStep3Description:
+    "回到設定 → 服務商，選擇預設或填寫端點、API 金鑰與模型名稱，然後測試連線。",
   addProvider: "新增服務商",
   providerEmpty: "還沒有服務商，點右上角新增。",
   providerDefaultName: "服務商",
@@ -494,6 +604,30 @@ const zhTW: Messages = {
   styleName: "名稱",
   stylePrompt: "提示詞",
   stylePromptPlaceholder: "輸入套用此風格時使用的提示詞",
+  styleOptimizeButton: "AI 優化",
+  styleOptimizeTokenHint: "AI 優化會額外消耗一些 Token",
+  styleOptimizeNoProvider: "請先設定模型服務商。",
+  styleOptimizeDialogTitle: "優化提示詞",
+  styleOptimizeDialogDescription:
+    "回答幾個簡短問題，AI 會逐步完善這條風格提示詞。",
+  styleOptimizeRound: "第 {round} 輪",
+  styleOptimizeAnswerCount: "已完成 {count} 輪",
+  styleOptimizeProgress: "提示詞優化進度",
+  styleOptimizeCurrentPrompt: "目前提示詞",
+  styleOptimizeNoExistingPrompt: "還沒有提示詞，AI 會從你的偏好開始建立。",
+  styleOptimizeCustomAnswer: "自訂回答",
+  styleOptimizeCustomPlaceholder: "輸入你的回答…",
+  styleOptimizeContinue: "繼續",
+  styleOptimizeFinalTitle: "優化完成",
+  styleOptimizeFinalDescription:
+    "這是根據你的回答產生的提示詞，可以直接套用或繼續修改。",
+  styleOptimizeRestart: "重新優化",
+  styleOptimizeApply: "套用提示詞",
+  styleOptimizeErrorDescription:
+    "暫時無法完成優化，請檢查模型服務商設定後重試。",
+  styleOptimizeRetry: "重試",
+  styleOptimizeGenerating: "AI 正在思考",
+  styleOptimizeGeneratingDescription: "正在根據回答整理下一個問題",
   styleProvider: "服務商",
   inheritDefaultProvider: "預設服務商",
   selectStyles: "選擇風格",
@@ -610,6 +744,26 @@ const ja: Messages = {
   backToTranslator: "翻訳に戻る",
   providerTitle: "プロバイダー",
   providerDescription: "翻訳に使うモデルサービスと接続を設定します。",
+  providerSetupEyebrow: "あと一歩です",
+  providerSetupTitle: "まずモデルプロバイダーに接続しましょう",
+  providerSetupDescription:
+    "Trali は文章の編集、タスク管理、結果の整理を担当します。翻訳や校正結果を生成するには、選択したモデルプロバイダーが必要です。",
+  providerSetupAction: "最初のプロバイダーを設定",
+  providerSetupSecureNote:
+    "API キーはシステムの安全な資格情報ストアに保存され、通常の設定ファイルには書き込まれません。",
+  providerSetupWhyTitle: "入手方法",
+  providerSetupWhyDescription:
+    "OpenAI 互換または Anthropic 互換 API に対応したサービスを選び、公式サイトでアカウントと API キーを作成してから、設定にエンドポイント、キー、モデルを入力します。",
+  providerSetupStepsTitle: "設定手順",
+  providerSetupStep1Title: "プロバイダーを選ぶ",
+  providerSetupStep1Description:
+    "OpenAI 互換または Anthropic 互換 API に対応したサービスを選びます。",
+  providerSetupStep2Title: "API キーを取得",
+  providerSetupStep2Description:
+    "サービスの公式サイトでアカウントを作成し、API キーを発行して利用可能な残高を確認します。",
+  providerSetupStep3Title: "接続情報を入力",
+  providerSetupStep3Description:
+    "設定 → プロバイダーに戻り、プリセットを選ぶかエンドポイント、API キー、モデル名を入力して接続をテストします。",
   addProvider: "プロバイダーを追加",
   providerEmpty: "プロバイダーがありません。右上から追加してください。",
   providerDefaultName: "プロバイダー",
@@ -670,6 +824,30 @@ const ja: Messages = {
   styleName: "名前",
   stylePrompt: "プロンプト",
   stylePromptPlaceholder: "このスタイルに使うプロンプトを入力",
+  styleOptimizeButton: "AI で最適化",
+  styleOptimizeTokenHint: "AI 最適化では追加のトークンを消費します",
+  styleOptimizeNoProvider: "先にモデルプロバイダーを設定してください。",
+  styleOptimizeDialogTitle: "プロンプトを最適化",
+  styleOptimizeDialogDescription:
+    "いくつかの質問に答えると、AI がスタイルプロンプトを段階的に整えます。",
+  styleOptimizeRound: "{round} 回目",
+  styleOptimizeAnswerCount: "{count} 回回答済み",
+  styleOptimizeProgress: "プロンプト最適化の進捗",
+  styleOptimizeCurrentPrompt: "現在のプロンプト",
+  styleOptimizeNoExistingPrompt: "プロンプトはまだありません。好みをもとに作成します。",
+  styleOptimizeCustomAnswer: "自由回答",
+  styleOptimizeCustomPlaceholder: "回答を入力…",
+  styleOptimizeContinue: "次へ",
+  styleOptimizeFinalTitle: "最適化が完了しました",
+  styleOptimizeFinalDescription:
+    "回答をもとに生成したプロンプトです。そのまま適用するか編集できます。",
+  styleOptimizeRestart: "最初から",
+  styleOptimizeApply: "プロンプトを適用",
+  styleOptimizeErrorDescription:
+    "今は最適化できません。プロバイダー設定を確認して再試行してください。",
+  styleOptimizeRetry: "再試行",
+  styleOptimizeGenerating: "AI が考えています",
+  styleOptimizeGeneratingDescription: "回答をもとに次の質問を準備しています…",
   styleProvider: "プロバイダー",
   inheritDefaultProvider: "デフォルトのプロバイダー",
   selectStyles: "スタイルを選択",
@@ -790,6 +968,26 @@ const ko: Messages = {
   backToTranslator: "번역으로 돌아가기",
   providerTitle: "프로바이더",
   providerDescription: "번역에 사용할 모델 서비스와 연결을 구성합니다.",
+  providerSetupEyebrow: "한 단계만 더",
+  providerSetupTitle: "모델 프로바이더를 연결하고 시작하세요",
+  providerSetupDescription:
+    "Trali는 텍스트 편집, 작업 관리, 결과 정리를 담당합니다. 번역이나 교정 결과를 생성하려면 선택한 모델 프로바이더가 필요합니다.",
+  providerSetupAction: "첫 프로바이더 설정",
+  providerSetupSecureNote:
+    "API 키는 시스템의 안전한 자격 증명 저장소에 보관되며 일반 설정 파일에는 기록되지 않습니다.",
+  providerSetupWhyTitle: "프로바이더를 얻는 방법",
+  providerSetupWhyDescription:
+    "OpenAI 호환 또는 Anthropic 호환 API를 지원하는 서비스를 선택하고 웹사이트에서 계정과 API 키를 만든 다음 설정에 엔드포인트, 키, 모델을 입력하세요.",
+  providerSetupStepsTitle: "설정 단계",
+  providerSetupStep1Title: "프로바이더 선택",
+  providerSetupStep1Description:
+    "OpenAI 호환 또는 Anthropic 호환 API를 지원하는 서비스를 선택하세요.",
+  providerSetupStep2Title: "API 키 발급",
+  providerSetupStep2Description:
+    "서비스 웹사이트에서 계정을 만들고 API 키를 발급한 뒤 사용 가능한 잔액을 확인하세요.",
+  providerSetupStep3Title: "연결 정보 입력",
+  providerSetupStep3Description:
+    "설정 → 프로바이더로 돌아와 프리셋을 선택하거나 엔드포인트, API 키, 모델명을 입력한 뒤 연결을 테스트하세요.",
   addProvider: "프로바이더 추가",
   providerEmpty: "프로바이더가 없습니다. 오른쪽 위에서 추가하세요.",
   providerDefaultName: "프로바이더",
@@ -850,6 +1048,30 @@ const ko: Messages = {
   styleName: "이름",
   stylePrompt: "프롬프트",
   stylePromptPlaceholder: "이 스타일에 사용할 프롬프트를 입력하세요",
+  styleOptimizeButton: "AI로 최적화",
+  styleOptimizeTokenHint: "AI 최적화에는 추가 토큰이 사용됩니다",
+  styleOptimizeNoProvider: "먼저 모델 제공업체를 설정하세요.",
+  styleOptimizeDialogTitle: "프롬프트 최적화",
+  styleOptimizeDialogDescription:
+    "몇 가지 질문에 답하면 AI가 스타일 프롬프트를 단계적으로 다듬습니다.",
+  styleOptimizeRound: "{round}번째 라운드",
+  styleOptimizeAnswerCount: "{count}개 답변 완료",
+  styleOptimizeProgress: "프롬프트 최적화 진행률",
+  styleOptimizeCurrentPrompt: "현재 프롬프트",
+  styleOptimizeNoExistingPrompt: "아직 프롬프트가 없습니다. 선호도부터 파악해 만들어요.",
+  styleOptimizeCustomAnswer: "직접 입력",
+  styleOptimizeCustomPlaceholder: "답변을 입력하세요…",
+  styleOptimizeContinue: "계속",
+  styleOptimizeFinalTitle: "프롬프트 최적화 완료",
+  styleOptimizeFinalDescription:
+    "답변을 바탕으로 생성한 프롬프트입니다. 바로 적용하거나 먼저 수정할 수 있습니다.",
+  styleOptimizeRestart: "처음부터",
+  styleOptimizeApply: "프롬프트 적용",
+  styleOptimizeErrorDescription:
+    "지금은 최적화할 수 없습니다. 제공업체 설정을 확인하고 다시 시도하세요.",
+  styleOptimizeRetry: "다시 시도",
+  styleOptimizeGenerating: "AI가 생각 중입니다",
+  styleOptimizeGeneratingDescription: "답변을 바탕으로 다음 질문을 준비하고 있습니다…",
   styleProvider: "프로바이더",
   inheritDefaultProvider: "기본 프로바이더",
   selectStyles: "스타일 선택",
@@ -971,6 +1193,26 @@ const es: Messages = {
   providerTitle: "Proveedores",
   providerDescription:
     "Configura los servicios de modelo y las conexiones usadas para traducir.",
+  providerSetupEyebrow: "Solo falta un paso",
+  providerSetupTitle: "Conecta un proveedor de modelos para empezar",
+  providerSetupDescription:
+    "Trali gestiona tu espacio de trabajo, las instrucciones y los resultados. El proveedor de modelos convierte tu texto en traducciones o sugerencias de corrección.",
+  providerSetupAction: "Configurar mi primer proveedor",
+  providerSetupSecureNote:
+    "La clave API se guarda en el almacén seguro de credenciales del sistema, separada de los ajustes normales.",
+  providerSetupWhyTitle: "Cómo obtener un proveedor",
+  providerSetupWhyDescription:
+    "Elige un servicio compatible con una API compatible con OpenAI o Anthropic, crea una cuenta y una clave API en su sitio web y añade el endpoint, la clave y el modelo en Ajustes.",
+  providerSetupStepsTitle: "Pasos de configuración",
+  providerSetupStep1Title: "Elige un proveedor",
+  providerSetupStep1Description:
+    "Elige un servicio compatible con una API compatible con OpenAI o Anthropic.",
+  providerSetupStep2Title: "Obtén una clave API",
+  providerSetupStep2Description:
+    "Crea una cuenta en el sitio del proveedor, genera una clave API y comprueba que tengas crédito disponible.",
+  providerSetupStep3Title: "Añade la conexión",
+  providerSetupStep3Description:
+    "Vuelve a Ajustes → Proveedores, elige un ajuste predeterminado o introduce el endpoint, la clave API y el modelo; después prueba la conexión.",
   addProvider: "Añadir proveedor",
   providerEmpty: "Aún no hay proveedores. Añade uno para empezar.",
   providerDefaultName: "Proveedor",
@@ -1032,6 +1274,32 @@ const es: Messages = {
   styleName: "Nombre",
   stylePrompt: "Indicación",
   stylePromptPlaceholder: "Introduce la indicación de este estilo",
+  styleOptimizeButton: "Optimizar con IA",
+  styleOptimizeTokenHint: "La optimización con IA consume algunos tokens adicionales",
+  styleOptimizeNoProvider: "Configura primero un proveedor de modelos.",
+  styleOptimizeDialogTitle: "Optimizar indicación",
+  styleOptimizeDialogDescription:
+    "Responde unas preguntas breves y la IA perfeccionará esta indicación paso a paso.",
+  styleOptimizeRound: "Ronda {round}",
+  styleOptimizeAnswerCount: "{count} rondas completadas",
+  styleOptimizeProgress: "Progreso de optimización",
+  styleOptimizeCurrentPrompt: "Indicación actual",
+  styleOptimizeNoExistingPrompt:
+    "Aún no hay ninguna indicación. La IA empezará por conocer tus preferencias.",
+  styleOptimizeCustomAnswer: "Respuesta personalizada",
+  styleOptimizeCustomPlaceholder: "Escribe tu respuesta…",
+  styleOptimizeContinue: "Continuar",
+  styleOptimizeFinalTitle: "Indicación optimizada",
+  styleOptimizeFinalDescription:
+    "Esta es la indicación generada a partir de tus respuestas. Puedes aplicarla o editarla.",
+  styleOptimizeRestart: "Empezar de nuevo",
+  styleOptimizeApply: "Aplicar indicación",
+  styleOptimizeErrorDescription:
+    "No se pudo optimizar la indicación. Revisa el proveedor y vuelve a intentarlo.",
+  styleOptimizeRetry: "Reintentar",
+  styleOptimizeGenerating: "La IA está pensando",
+  styleOptimizeGeneratingDescription:
+    "Preparando la siguiente pregunta a partir de tus respuestas…",
   styleProvider: "Proveedor",
   inheritDefaultProvider: "Proveedor predeterminado",
   selectStyles: "Seleccionar estilos",
@@ -1157,6 +1425,26 @@ const de: Messages = {
   providerTitle: "Anbieter",
   providerDescription:
     "Konfigurieren Sie die Modelldienste und Verbindungen für die Übersetzung.",
+  providerSetupEyebrow: "Nur noch ein Schritt",
+  providerSetupTitle: "Verbinden Sie einen Modelldienst, um zu beginnen",
+  providerSetupDescription:
+    "Trali verwaltet Arbeitsbereich, Eingaben und Ergebnisse. Ein Modelldienst wandelt Ihren Text in Übersetzungen oder Korrekturvorschläge um.",
+  providerSetupAction: "Ersten Anbieter konfigurieren",
+  providerSetupSecureNote:
+    "Der API-Schlüssel wird im sicheren Anmeldedatenspeicher des Systems getrennt von den normalen Einstellungen gespeichert.",
+  providerSetupWhyTitle: "So erhalten Sie einen Anbieter",
+  providerSetupWhyDescription:
+    "Wählen Sie einen Dienst mit OpenAI-kompatibler oder Anthropic-kompatibler API, erstellen Sie dort ein Konto und einen API-Schlüssel und tragen Sie Endpunkt, Schlüssel und Modell in den Einstellungen ein.",
+  providerSetupStepsTitle: "Einrichtungsschritte",
+  providerSetupStep1Title: "Anbieter auswählen",
+  providerSetupStep1Description:
+    "Wählen Sie einen Dienst mit OpenAI-kompatibler oder Anthropic-kompatibler API.",
+  providerSetupStep2Title: "API-Schlüssel erhalten",
+  providerSetupStep2Description:
+    "Erstellen Sie auf der Website des Anbieters ein Konto, erzeugen Sie einen API-Schlüssel und prüfen Sie das verfügbare Guthaben.",
+  providerSetupStep3Title: "Verbindung hinzufügen",
+  providerSetupStep3Description:
+    "Kehren Sie zu Einstellungen → Anbieter zurück, wählen Sie eine Vorlage oder geben Sie Endpunkt, API-Schlüssel und Modell ein und testen Sie die Verbindung.",
   addProvider: "Anbieter hinzufügen",
   providerEmpty:
     "Noch keine Anbieter. Fügen Sie einen hinzu, um zu starten.",
@@ -1220,6 +1508,32 @@ const de: Messages = {
   styleName: "Name",
   stylePrompt: "Prompt",
   stylePromptPlaceholder: "Geben Sie den Prompt für diesen Stil ein",
+  styleOptimizeButton: "Mit KI optimieren",
+  styleOptimizeTokenHint: "Die KI-Optimierung verbraucht zusätzliche Tokens",
+  styleOptimizeNoProvider: "Richten Sie zuerst einen Modellanbieter ein.",
+  styleOptimizeDialogTitle: "Prompt optimieren",
+  styleOptimizeDialogDescription:
+    "Beantworten Sie einige kurze Fragen, damit die KI diesen Stil-Prompt Schritt für Schritt verfeinert.",
+  styleOptimizeRound: "Runde {round}",
+  styleOptimizeAnswerCount: "{count} Runden beantwortet",
+  styleOptimizeProgress: "Fortschritt der Prompt-Optimierung",
+  styleOptimizeCurrentPrompt: "Aktueller Prompt",
+  styleOptimizeNoExistingPrompt:
+    "Noch kein Prompt vorhanden. Die KI beginnt mit Ihren Vorlieben.",
+  styleOptimizeCustomAnswer: "Eigene Antwort",
+  styleOptimizeCustomPlaceholder: "Antwort eingeben…",
+  styleOptimizeContinue: "Weiter",
+  styleOptimizeFinalTitle: "Prompt optimiert",
+  styleOptimizeFinalDescription:
+    "Hier ist der aus Ihren Antworten erstellte Prompt. Sie können ihn direkt anwenden oder bearbeiten.",
+  styleOptimizeRestart: "Neu starten",
+  styleOptimizeApply: "Prompt anwenden",
+  styleOptimizeErrorDescription:
+    "Der Prompt konnte gerade nicht optimiert werden. Prüfen Sie den Anbieter und versuchen Sie es erneut.",
+  styleOptimizeRetry: "Erneut versuchen",
+  styleOptimizeGenerating: "KI denkt nach",
+  styleOptimizeGeneratingDescription:
+    "Die nächste Frage wird aus Ihren Antworten vorbereitet…",
   styleProvider: "Anbieter",
   inheritDefaultProvider: "Standardanbieter",
   selectStyles: "Stile auswählen",
@@ -1345,6 +1659,26 @@ const fr: Messages = {
   providerTitle: "Fournisseurs",
   providerDescription:
     "Configurez les services de modèle et les connexions utilisés pour la traduction.",
+  providerSetupEyebrow: "Encore une étape",
+  providerSetupTitle: "Connectez un fournisseur de modèles pour commencer",
+  providerSetupDescription:
+    "Trali gère votre espace de travail, vos instructions et vos résultats. Le fournisseur de modèles transforme votre texte en traductions ou en suggestions de correction.",
+  providerSetupAction: "Configurer mon premier fournisseur",
+  providerSetupSecureNote:
+    "La clé API est enregistrée dans le coffre-fort d’identifiants du système, séparément des réglages courants.",
+  providerSetupWhyTitle: "Comment en obtenir un",
+  providerSetupWhyDescription:
+    "Choisissez un service compatible avec une API compatible OpenAI ou Anthropic, créez un compte et une clé API sur son site, puis ajoutez le point de terminaison, la clé et le modèle dans les réglages.",
+  providerSetupStepsTitle: "Étapes de configuration",
+  providerSetupStep1Title: "Choisir un fournisseur",
+  providerSetupStep1Description:
+    "Choisissez un service compatible avec une API compatible OpenAI ou Anthropic.",
+  providerSetupStep2Title: "Obtenir une clé API",
+  providerSetupStep2Description:
+    "Créez un compte sur le site du fournisseur, générez une clé API et vérifiez que votre compte dispose de crédits.",
+  providerSetupStep3Title: "Ajouter la connexion",
+  providerSetupStep3Description:
+    "Revenez dans Réglages → Fournisseurs, choisissez un préréglage ou saisissez le point de terminaison, la clé API et le modèle, puis testez la connexion.",
   addProvider: "Ajouter un fournisseur",
   providerEmpty:
     "Aucun fournisseur pour le moment. Ajoutez-en un pour commencer.",
@@ -1408,6 +1742,32 @@ const fr: Messages = {
   styleName: "Nom",
   stylePrompt: "Invite",
   stylePromptPlaceholder: "Saisissez l’invite utilisée pour ce style",
+  styleOptimizeButton: "Optimiser avec l’IA",
+  styleOptimizeTokenHint: "L’optimisation par IA consomme quelques tokens supplémentaires",
+  styleOptimizeNoProvider: "Configurez d’abord un fournisseur de modèles.",
+  styleOptimizeDialogTitle: "Optimiser l’invite",
+  styleOptimizeDialogDescription:
+    "Répondez à quelques questions rapides et l’IA affinera cette invite de style étape par étape.",
+  styleOptimizeRound: "Tour {round}",
+  styleOptimizeAnswerCount: "{count} tours terminés",
+  styleOptimizeProgress: "Progression de l’optimisation",
+  styleOptimizeCurrentPrompt: "Invite actuelle",
+  styleOptimizeNoExistingPrompt:
+    "Aucune invite pour le moment. L’IA commencera par comprendre vos préférences.",
+  styleOptimizeCustomAnswer: "Réponse personnalisée",
+  styleOptimizeCustomPlaceholder: "Saisissez votre réponse…",
+  styleOptimizeContinue: "Continuer",
+  styleOptimizeFinalTitle: "Invite optimisée",
+  styleOptimizeFinalDescription:
+    "Voici l’invite générée à partir de vos réponses. Appliquez-la telle quelle ou modifiez-la.",
+  styleOptimizeRestart: "Recommencer",
+  styleOptimizeApply: "Appliquer l’invite",
+  styleOptimizeErrorDescription:
+    "Impossible d’optimiser l’invite pour le moment. Vérifiez le fournisseur et réessayez.",
+  styleOptimizeRetry: "Réessayer",
+  styleOptimizeGenerating: "L’IA réfléchit",
+  styleOptimizeGeneratingDescription:
+    "Préparation de la prochaine question à partir de vos réponses…",
   styleProvider: "Fournisseur",
   inheritDefaultProvider: "Fournisseur par défaut",
   selectStyles: "Sélectionner les styles",
@@ -1533,6 +1893,26 @@ const ptBR: Messages = {
   providerTitle: "Provedores",
   providerDescription:
     "Configure os serviços de modelo e as conexões usadas na tradução.",
+  providerSetupEyebrow: "Falta apenas um passo",
+  providerSetupTitle: "Conecte um provedor de modelos para começar",
+  providerSetupDescription:
+    "O Trali gerencia seu espaço de trabalho, instruções e resultados. O provedor de modelos transforma seu texto em traduções ou sugestões de revisão.",
+  providerSetupAction: "Configurar meu primeiro provedor",
+  providerSetupSecureNote:
+    "A chave de API é armazenada no cofre seguro de credenciais do sistema, separada das configurações comuns.",
+  providerSetupWhyTitle: "Como obter um provedor",
+  providerSetupWhyDescription:
+    "Escolha um serviço compatível com uma API compatível com OpenAI ou Anthropic, crie uma conta e uma chave de API no site e informe o endpoint, a chave e o modelo nas configurações.",
+  providerSetupStepsTitle: "Etapas de configuração",
+  providerSetupStep1Title: "Escolha um provedor",
+  providerSetupStep1Description:
+    "Escolha um serviço compatível com uma API compatível com OpenAI ou Anthropic.",
+  providerSetupStep2Title: "Obtenha uma chave de API",
+  providerSetupStep2Description:
+    "Crie uma conta no site do provedor, gere uma chave de API e confirme que há créditos disponíveis.",
+  providerSetupStep3Title: "Adicione a conexão",
+  providerSetupStep3Description:
+    "Volte a Configurações → Provedores, escolha uma predefinição ou informe o endpoint, a chave de API e o modelo; depois teste a conexão.",
   addProvider: "Adicionar provedor",
   providerEmpty: "Ainda não há provedores. Adicione um para começar.",
   providerDefaultName: "Provedor",
@@ -1594,6 +1974,32 @@ const ptBR: Messages = {
   styleName: "Nome",
   stylePrompt: "Prompt",
   stylePromptPlaceholder: "Digite o prompt usado neste estilo",
+  styleOptimizeButton: "Otimizar com IA",
+  styleOptimizeTokenHint: "A otimização com IA consome alguns tokens adicionais",
+  styleOptimizeNoProvider: "Configure primeiro um provedor de modelos.",
+  styleOptimizeDialogTitle: "Otimizar prompt",
+  styleOptimizeDialogDescription:
+    "Responda a algumas perguntas rápidas e a IA aprimorará este prompt de estilo passo a passo.",
+  styleOptimizeRound: "Rodada {round}",
+  styleOptimizeAnswerCount: "{count} rodadas concluídas",
+  styleOptimizeProgress: "Progresso da otimização",
+  styleOptimizeCurrentPrompt: "Prompt atual",
+  styleOptimizeNoExistingPrompt:
+    "Ainda não há um prompt. A IA começará entendendo suas preferências.",
+  styleOptimizeCustomAnswer: "Resposta personalizada",
+  styleOptimizeCustomPlaceholder: "Digite sua resposta…",
+  styleOptimizeContinue: "Continuar",
+  styleOptimizeFinalTitle: "Prompt otimizado",
+  styleOptimizeFinalDescription:
+    "Este é o prompt gerado a partir das suas respostas. Aplique-o ou edite-o antes.",
+  styleOptimizeRestart: "Recomeçar",
+  styleOptimizeApply: "Aplicar prompt",
+  styleOptimizeErrorDescription:
+    "Não foi possível otimizar o prompt agora. Verifique o provedor e tente novamente.",
+  styleOptimizeRetry: "Tentar novamente",
+  styleOptimizeGenerating: "A IA está pensando",
+  styleOptimizeGeneratingDescription:
+    "Preparando a próxima pergunta com base nas suas respostas…",
   styleProvider: "Provedor",
   inheritDefaultProvider: "Provedor padrão",
   selectStyles: "Selecionar estilos",
@@ -1718,6 +2124,26 @@ const ru: Messages = {
   providerTitle: "Провайдеры",
   providerDescription:
     "Настройте модельные сервисы и подключения для перевода.",
+  providerSetupEyebrow: "Остался один шаг",
+  providerSetupTitle: "Подключите провайдера моделей, чтобы начать",
+  providerSetupDescription:
+    "Trali управляет рабочим пространством, инструкциями и результатами. Провайдер моделей превращает ваш текст в перевод или предложения по исправлению.",
+  providerSetupAction: "Настроить первого провайдера",
+  providerSetupSecureNote:
+    "API-ключ хранится в защищённом системном хранилище учётных данных отдельно от обычных настроек.",
+  providerSetupWhyTitle: "Как получить провайдера",
+  providerSetupWhyDescription:
+    "Выберите сервис с API, совместимым с OpenAI или Anthropic, создайте аккаунт и API-ключ на его сайте, затем добавьте конечную точку, ключ и модель в настройках.",
+  providerSetupStepsTitle: "Шаги настройки",
+  providerSetupStep1Title: "Выберите провайдера",
+  providerSetupStep1Description:
+    "Выберите сервис с API, совместимым с OpenAI или Anthropic.",
+  providerSetupStep2Title: "Получите API-ключ",
+  providerSetupStep2Description:
+    "Зарегистрируйтесь на сайте провайдера, создайте API-ключ и проверьте наличие доступного баланса.",
+  providerSetupStep3Title: "Добавьте подключение",
+  providerSetupStep3Description:
+    "Вернитесь в Настройки → Провайдеры, выберите пресет или укажите конечную точку, API-ключ и модель, затем проверьте подключение.",
   addProvider: "Добавить провайдера",
   providerEmpty: "Провайдеров пока нет. Добавьте одного, чтобы начать.",
   providerDefaultName: "Провайдер",
@@ -1779,6 +2205,32 @@ const ru: Messages = {
   styleName: "Название",
   stylePrompt: "Подсказка",
   stylePromptPlaceholder: "Введите подсказку для этого стиля",
+  styleOptimizeButton: "Оптимизировать с ИИ",
+  styleOptimizeTokenHint: "Оптимизация с ИИ использует дополнительные токены",
+  styleOptimizeNoProvider: "Сначала настройте поставщика моделей.",
+  styleOptimizeDialogTitle: "Оптимизация подсказки",
+  styleOptimizeDialogDescription:
+    "Ответьте на несколько коротких вопросов, и ИИ пошагово улучшит подсказку стиля.",
+  styleOptimizeRound: "Раунд {round}",
+  styleOptimizeAnswerCount: "Завершено раундов: {count}",
+  styleOptimizeProgress: "Прогресс оптимизации подсказки",
+  styleOptimizeCurrentPrompt: "Текущая подсказка",
+  styleOptimizeNoExistingPrompt:
+    "Подсказки пока нет. ИИ начнёт с изучения ваших предпочтений.",
+  styleOptimizeCustomAnswer: "Свой ответ",
+  styleOptimizeCustomPlaceholder: "Введите ответ…",
+  styleOptimizeContinue: "Продолжить",
+  styleOptimizeFinalTitle: "Подсказка оптимизирована",
+  styleOptimizeFinalDescription:
+    "Вот подсказка, созданная по вашим ответам. Примените её или сначала отредактируйте.",
+  styleOptimizeRestart: "Начать заново",
+  styleOptimizeApply: "Применить подсказку",
+  styleOptimizeErrorDescription:
+    "Не удалось оптимизировать подсказку. Проверьте настройки поставщика и повторите попытку.",
+  styleOptimizeRetry: "Повторить",
+  styleOptimizeGenerating: "ИИ думает",
+  styleOptimizeGeneratingDescription:
+    "Готовим следующий вопрос на основе ваших ответов…",
   styleProvider: "Провайдер",
   inheritDefaultProvider: "Провайдер по умолчанию",
   selectStyles: "Выбрать стили",

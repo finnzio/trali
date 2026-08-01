@@ -21,15 +21,20 @@ import {
 } from "@tauri-apps/plugin-autostart";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   ArrowUpDownIcon,
   CheckIcon,
   CircleCheckIcon,
   CircleXIcon,
   CopyIcon,
   GripVerticalIcon,
+  KeyRoundIcon,
   PlusIcon,
+  PlugZapIcon,
   RefreshCwIcon,
   Settings2Icon,
+  ShieldCheckIcon,
+  SparklesIcon,
   MoonIcon,
   MonitorIcon,
   PencilIcon,
@@ -44,6 +49,7 @@ import {
   WindowDragRegion,
 } from "@/components/window-chrome";
 import { TransferStatusIcon } from "@/components/transfer-status-icon";
+import { PromptOptimizerDialog } from "@/components/prompt-optimizer-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -252,6 +258,124 @@ function readProviders(): ProviderConfig[] {
   } catch {
     return [];
   }
+}
+
+type ProviderSetupEmptyStateProps = {
+  onOpenSettings: () => void;
+};
+
+function ProviderSetupEmptyState({
+  onOpenSettings,
+}: ProviderSetupEmptyStateProps) {
+  const { t } = useI18n();
+  const steps = [
+    {
+      icon: PlugZapIcon,
+      title: t("providerSetupStep1Title"),
+      description: t("providerSetupStep1Description"),
+    },
+    {
+      icon: KeyRoundIcon,
+      title: t("providerSetupStep2Title"),
+      description: t("providerSetupStep2Description"),
+    },
+    {
+      icon: Settings2Icon,
+      title: t("providerSetupStep3Title"),
+      description: t("providerSetupStep3Description"),
+    },
+  ];
+
+  return (
+    <section
+      className="relative min-h-0 flex-1 overflow-y-auto bg-muted/20 px-4 py-4 sm:px-6 sm:py-5"
+      aria-labelledby="provider-setup-title"
+    >
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 right-[12%] size-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 left-[8%] size-64 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-full w-full max-w-3xl items-center justify-center">
+        <div className="w-full overflow-hidden rounded-2xl border bg-card shadow-lg shadow-primary/5 ring-1 ring-foreground/5">
+          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
+            <div className="relative p-5 sm:p-7">
+              <div className="mb-4 flex items-center gap-2.5">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                  <SparklesIcon className="size-4" />
+                </div>
+                <Badge variant="secondary">
+                  {t("providerSetupEyebrow")}
+                </Badge>
+              </div>
+
+              <h1
+                id="provider-setup-title"
+                className="max-w-xl text-xl font-semibold tracking-tight sm:text-2xl"
+              >
+                {t("providerSetupTitle")}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-5 text-muted-foreground">
+                {t("providerSetupDescription")}
+              </p>
+
+              <Button
+                size="lg"
+                className="mt-5 gap-2 rounded-full px-4 shadow-md shadow-primary/15"
+                onClick={onOpenSettings}
+              >
+                {t("providerSetupAction")}
+                <ArrowRightIcon className="size-4" />
+              </Button>
+
+              <div className="mt-4 flex max-w-xl items-start gap-2 text-xs leading-4 text-muted-foreground">
+                <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{t("providerSetupSecureNote")}</span>
+              </div>
+            </div>
+
+            <div className="border-t bg-muted/30 p-5 sm:p-6 lg:border-t-0 lg:border-l">
+              <p className="text-sm font-semibold">
+                {t("providerSetupWhyTitle")}
+              </p>
+              <p className="mt-1.5 text-sm leading-5 text-muted-foreground">
+                {t("providerSetupWhyDescription")}
+              </p>
+
+              <div className="mt-5 border-t pt-4">
+                <p className="text-sm font-semibold">
+                  {t("providerSetupStepsTitle")}
+                </p>
+                <div className="mt-4 grid gap-3.5">
+                  {steps.map((step, index) => {
+                    const StepIcon = step.icon;
+                    return (
+                      <div key={step.title} className="flex gap-3">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-background text-primary shadow-sm ring-1 ring-foreground/10">
+                          <StepIcon className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            <span className="mr-1.5 text-xs text-muted-foreground">
+                              0{index + 1}
+                            </span>
+                            {step.title}
+                          </p>
+                          <p className="mt-0.5 text-xs leading-4 text-muted-foreground">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function readStyles(): StyleConfig[] {
@@ -508,6 +632,9 @@ function App() {
     useState<ProviderConfig | null>(null);
   const [stylePendingDelete, setStylePendingDelete] =
     useState<StyleConfig | null>(null);
+  const [stylePromptOptimizerId, setStylePromptOptimizerId] = useState<
+    string | null
+  >(null);
   const [draggedStyleId, setDraggedStyleId] = useState<string | null>(null);
   const draggedStyleIdRef = useRef<string | null>(null);
   const [styleDropTarget, setStyleDropTarget] = useState<{
@@ -1223,6 +1350,7 @@ function App() {
   function openSettings() {
     setSettingsTarget(defaultTarget);
     setSettingsLocale(locale);
+    setStylePromptOptimizerId(null);
     setSettingsOpen(true);
   }
 
@@ -1931,6 +2059,10 @@ function App() {
       .toLocaleLowerCase()
       .includes(normalizedProviderSearch);
   });
+  const hasConfiguredProvider = providers.length > 0;
+  const stylePromptOptimizerTarget = styles.find(
+    (style) => style.id === stylePromptOptimizerId,
+  );
 
   if (settingsOpen) {
     const tabs: Array<{ value: SettingsTab; label: string }> = [
@@ -1950,7 +2082,10 @@ function App() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSettingsOpen(false)}
+              onClick={() => {
+                setStylePromptOptimizerId(null);
+                setSettingsOpen(false);
+              }}
               aria-label={t("backToTranslator")}
               className="h-auto shrink-0 gap-1 px-1 py-1 font-semibold"
             >
@@ -2542,7 +2677,34 @@ function App() {
                       </Button>
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>{t("stylePrompt")}</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>{t("stylePrompt")}</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setStylePromptOptimizerId(style.id)
+                                  }
+                                  disabled={
+                                    style.providerId === null &&
+                                    defaultProviderId === null
+                                  }
+                                />
+                              }
+                            >
+                              <SparklesIcon />
+                              {t("styleOptimizeButton")}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t("styleOptimizeTokenHint")}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Textarea
                         value={style.prompt}
                         placeholder={t("stylePromptPlaceholder")}
@@ -3059,6 +3221,22 @@ function App() {
             )}
           </section>
         </div>
+        <PromptOptimizerDialog
+          open={stylePromptOptimizerTarget !== undefined}
+          currentPrompt={stylePromptOptimizerTarget?.prompt ?? ""}
+          providerId={
+            stylePromptOptimizerTarget?.providerId ?? defaultProviderId
+          }
+          onOpenChange={(open) => {
+            if (!open) setStylePromptOptimizerId(null);
+          }}
+          onApply={(prompt) => {
+            if (stylePromptOptimizerTarget) {
+              updateStyle(stylePromptOptimizerTarget.id, "prompt", prompt);
+            }
+            setStylePromptOptimizerId(null);
+          }}
+        />
         <Dialog
           open={providerPendingDelete !== null}
           onOpenChange={(open) => {
@@ -3222,15 +3400,29 @@ function App() {
       <div className="h-full w-full">
         <section
           ref={mainPanelLayoutRef}
-          className="grid h-full overflow-hidden bg-card"
-          style={{
-            gridTemplateRows: `minmax(${MAIN_PANEL_MIN_HEIGHT}px, ${sourcePanelRatio}fr) auto minmax(${MAIN_PANEL_MIN_HEIGHT}px, ${1 - sourcePanelRatio}fr)`,
-          }}
+          className={
+            hasConfiguredProvider
+              ? "grid h-full overflow-hidden bg-card"
+              : "flex h-full flex-col overflow-hidden bg-card"
+          }
+          style={
+            hasConfiguredProvider
+              ? {
+                  gridTemplateRows: `minmax(${MAIN_PANEL_MIN_HEIGHT}px, ${sourcePanelRatio}fr) auto minmax(${MAIN_PANEL_MIN_HEIGHT}px, ${1 - sourcePanelRatio}fr)`,
+                }
+              : undefined
+          }
           onPointerMove={handlePanelDividerPointerMove}
           onPointerUp={handlePanelDividerPointerEnd}
           onPointerCancel={handlePanelDividerPointerEnd}
         >
-          <div className="grid min-h-0 grid-rows-[auto_1fr]">
+          <div
+            className={
+              hasConfiguredProvider
+                ? "grid min-h-0 grid-rows-[auto_1fr]"
+                : "shrink-0"
+            }
+          >
             <div className="flex items-center gap-2 px-3 py-2.5 pl-3">
               <div className="flex shrink-0 items-center gap-2">
                 <div
@@ -3327,18 +3519,22 @@ function App() {
                 <WindowControls />
               </div>
             </div>
-            <Textarea
-              value={sourceText}
-              onChange={(event) => {
-                setSourceText(event.currentTarget.value);
-              }}
-              placeholder={t("sourcePlaceholder")}
-              className="h-full min-h-0 resize-none rounded-none border-0 px-4 py-4 text-base shadow-none focus-visible:ring-0"
-              autoFocus
-            />
+            {hasConfiguredProvider ? (
+              <Textarea
+                value={sourceText}
+                onChange={(event) => {
+                  setSourceText(event.currentTarget.value);
+                }}
+                placeholder={t("sourcePlaceholder")}
+                className="h-full min-h-0 resize-none rounded-none border-0 px-4 py-4 text-base shadow-none focus-visible:ring-0"
+                autoFocus
+              />
+            ) : null}
           </div>
 
-          <div
+          {hasConfiguredProvider ? (
+            <>
+              <div
             ref={mainPanelDividerRef}
             className="group relative z-10 h-2 cursor-row-resize touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             data-dragging={isPanelDividerDragging}
@@ -3376,9 +3572,9 @@ function App() {
               />
               <ArrowUpDownIcon className="transfer-swap-icon absolute size-4" />
             </Button>
-          </div>
+              </div>
 
-          <div className="grid min-h-0 grid-rows-[auto_1fr] bg-muted/20">
+              <div className="grid min-h-0 grid-rows-[auto_1fr] bg-muted/20">
             <div className="flex min-w-0 items-center gap-3 px-4 py-2.5">
               <div className="flex h-8 shrink-0 items-center">
                 {workMode === "translate" ? (
@@ -3648,7 +3844,16 @@ function App() {
                 ))}
               </div>
             </div>
-          </div>
+              </div>
+            </>
+          ) : (
+            <ProviderSetupEmptyState
+              onOpenSettings={() => {
+                setSettingsTab("provider");
+                openSettings();
+              }}
+            />
+          )}
         </section>
 
       </div>

@@ -9,6 +9,7 @@ mod commands;
 mod error;
 mod generation;
 mod glossary;
+mod prompt_optimizer;
 mod prompts;
 mod providers;
 mod secrets;
@@ -136,6 +137,7 @@ pub fn run() {
             commands::test_provider_connection,
             commands::generate,
             commands::cancel_generation,
+            commands::optimize_style_prompt,
             commands::speech_capabilities,
             commands::speak_text,
             commands::stop_speech
