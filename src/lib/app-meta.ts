@@ -1,7 +1,9 @@
+import packageJson from "../../package.json";
+
 /** Display name, version, and author shown in the UI chrome. */
 export const APP_NAME = "Trali";
 
-/** Keep in sync with package.json and src-tauri/tauri.conf.json. */
-export const APP_VERSION = "0.1.3";
+/** Read the display version from the package manifest used for releases. */
+export const APP_VERSION = packageJson.version;
 
 export const APP_AUTHOR = "StereoApp";
