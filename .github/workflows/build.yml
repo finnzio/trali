@@ -85,6 +85,7 @@ jobs:
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           # Draft release only on version tags (e.g. v0.1.0).
           # Leave empty on branch/PR builds so no release is created.
@@ -101,7 +102,7 @@ jobs:
             | Linux | x64 (amd64) | `.AppImage`, `.deb` |
           releaseDraft: true
           prerelease: false
-          uploadUpdaterJson: false
+          uploadUpdaterJson: true
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: trali-[platform]-[arch]-[bundle]
           releaseAssetNamePattern: Trali-v[version]-[platform]-[arch][setup][ext]

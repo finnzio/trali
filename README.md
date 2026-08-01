@@ -169,6 +169,14 @@ Trali 会在 Tauri 的应用配置目录中保存：
 
 推送 `v*` 标签会创建一个带安装包的 Draft Release。
 
+应用更新使用 Tauri 官方 updater，并从 GitHub Release 的 `latest.json` 获取版本信息。首次启用发布更新前，需要生成一对 updater 签名密钥，将公钥保留在 `src-tauri/tauri.conf.json`，并把私钥内容保存为 GitHub 仓库 Secret：`TAURI_SIGNING_PRIVATE_KEY`。
+
+```powershell
+pnpm tauri signer generate -w "$HOME/.tauri/trali.key"
+```
+
+之后推送新的 `v*` 标签，GitHub Actions 会上传签名更新产物和 `latest.json`。不要将私钥提交到仓库。
+
 ## License
 
 仓库目前还没有 License 文件。
