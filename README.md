@@ -101,14 +101,6 @@ Custom base URLs are supported, so official APIs and compatible gateways both wo
 
 Trali is a small desktop app: the UI is web tech; privileged work stays in Rust.
 
-```mermaid
-flowchart LR
-    UI["React UI"] -->|"Tauri commands"| Core["Rust core"]
-    Core --> Settings["Local settings & glossary"]
-    Core --> Keyring["OS credential store"]
-    Core -->|"HTTPS"| Provider["Your model provider"]
-```
-
 | Layer | Stack |
 |-------|--------|
 | Desktop shell | Tauri 2 |
@@ -165,14 +157,6 @@ Trali is primarily a tool for my own workflow, but I am happy if it helps others
 - If you like the project, a star is appreciated
 
 ---
-
-应用更新使用 Tauri 官方 updater，并从 GitHub Release 的 `latest.json` 获取版本信息。首次启用发布更新前，需要生成一对 updater 签名密钥，将公钥保留在 `src-tauri/tauri.conf.json`，并把私钥内容保存为 GitHub 仓库 Secret：`TAURI_SIGNING_PRIVATE_KEY`。
-
-```powershell
-pnpm tauri signer generate -w "$HOME/.tauri/trali.key"
-```
-
-之后推送新的 `v*` 标签，GitHub Actions 会上传签名更新产物和 `latest.json`。不要将私钥提交到仓库。
 
 ## License
 
