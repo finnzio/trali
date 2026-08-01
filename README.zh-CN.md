@@ -13,11 +13,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/StereoApp/trali/releases">Windows</a>
+  <a href="#download">Windows</a>
   ·
-  <a href="https://github.com/StereoApp/trali/releases">macOS</a>
+  <a href="#download">macOS</a>
   ·
-  <a href="https://github.com/StereoApp/trali/releases">Linux</a>
+  <a href="#download">Linux</a>
 </p>
 
 ---
@@ -82,6 +82,14 @@ Trali 是一个**轻量级的桌面 AI 翻译器和写作助手**。你自带模
 | Windows | MSI、NSIS `.exe` |
 | macOS | Apple Silicon 与 Intel `.dmg` |
 | Linux | `.AppImage`、`.deb` |
+
+> **Important:** 如果 macOS 提示“Trali 已损坏，无法打开”，并且你确认应用来自可信的 Trali 下载源，请先将应用拖入“应用程序”，然后打开“终端”执行：
+>
+> ```bash
+> sudo xattr -dr com.apple.quarantine /Applications/Trali.app
+> ```
+>
+> 输入 Mac 登录密码后，再从“应用程序”打开 Trali。这个命令会移除 macOS 为网络下载文件添加的隔离标记，让系统允许应用启动；它不会修复真正损坏的文件，也不会为应用签名，请只对可信来源的应用使用。
 
 你需要自备 API Key，并能访问所选服务商。
 

@@ -25,18 +25,22 @@ jobs:
           - platform: windows-latest
             args: ""
             name: windows-x64
+            assetNamePattern: Trali-v[version]-[platform]-[arch][setup][ext]
           # macOS Apple Silicon
           - platform: macos-latest
             args: --target aarch64-apple-darwin
             name: macos-aarch64
+            assetNamePattern: Trali-v[version]-macOS-Apple-Silicon[ext]
           # macOS Intel
           - platform: macos-latest
             args: --target x86_64-apple-darwin
             name: macos-x64
+            assetNamePattern: Trali-v[version]-macOS-Intel[ext]
           # Linux
           - platform: ubuntu-22.04
             args: ""
             name: linux-x64
+            assetNamePattern: Trali-v[version]-[platform]-[arch][setup][ext]
 
     runs-on: ${{ matrix.platform }}
     name: ${{ matrix.name }}
@@ -82,7 +86,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -105,6 +109,6 @@ jobs:
           uploadUpdaterJson: true
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: trali-[platform]-[arch]-[bundle]
-          releaseAssetNamePattern: Trali-v[version]-[platform]-[arch][setup][ext]
+          releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}

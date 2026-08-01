@@ -62,6 +62,7 @@ import { TransferStatusIcon } from "@/components/transfer-status-icon";
 import { PromptOptimizerDialog } from "@/components/prompt-optimizer-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Dialog,
@@ -285,8 +286,13 @@ type GenerationResult = {
 };
 
 type GenerationCacheEntry = {
-  contextKey: string | null;
-  results: Record<string, GenerationResult>;
+  results: Record<
+    string,
+    {
+      contextKey: string;
+      result: GenerationResult;
+    }
+  >;
 };
 
 type GenerationCache = Record<WorkMode, GenerationCacheEntry>;
@@ -664,6 +670,9 @@ function App() {
   });
   const [glossary, setGlossary] = useState<GlossaryData>(readGlossary);
   const [mountGlossary, setMountGlossary] = useState(true);
+  const [transcreationByStyleId, setTranscreationByStyleId] = useState<
+    Record<string, boolean>
+  >({});
   const [fetchingProviderId, setFetchingProviderId] = useState<string | null>(
     null,
   );
@@ -734,8 +743,8 @@ function App() {
   const generationResultsRef = useRef(generationResults);
   generationResultsRef.current = generationResults;
   const generationCacheRef = useRef<GenerationCache>({
-    translate: { contextKey: null, results: {} },
-    proofread: { contextKey: null, results: {} },
+    translate: { results: {} },
+    proofread: { results: {} },
   });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
   /** Fingerprint of inputs that invalidate cached per-style results. */
@@ -1071,7 +1080,7 @@ function App() {
         ? (detectedLanguage ?? "auto")
         : sourceLanguage;
     const includeGlossary = workMode === "proofread" || mountGlossary;
-    const contextKey = JSON.stringify({
+    const baseContextKey = JSON.stringify({
       text,
       workMode,
       sourceLanguage: resolvedSourceLanguage,
@@ -1092,6 +1101,25 @@ function App() {
         providerId: style.providerId,
       })),
     });
+    const transcreationContext = selectedStyleIds.map((id) => [
+      id,
+      id !== "default" && transcreationByStyleId[id] === true,
+    ]);
+    const contextKey = JSON.stringify({
+      baseContextKey,
+      transcreationContext,
+    });
+    const variantContextKeys: Record<string, string> = Object.fromEntries(
+      selectedStyleIds.map((id) => [
+        id,
+        JSON.stringify({
+          baseContextKey,
+          id,
+          transcreation:
+            id !== "default" && transcreationByStyleId[id] === true,
+        }),
+      ]),
+    );
 
     if (skipNextGenerationRef.current) {
       skipNextGenerationRef.current = false;
@@ -1121,31 +1149,33 @@ function App() {
 
     const contextChanged = generationContextRef.current !== contextKey;
     const modeCache = generationCacheRef.current[workMode];
-    const cachedResultsForContext =
-      modeCache.contextKey === contextKey ? modeCache.results : {};
+    const cachedResultsForContext: Record<string, GenerationResult> =
+      Object.fromEntries(
+        selectedStyleIds.flatMap((id) => {
+          const cached = modeCache.results[id];
+          return cached?.contextKey === variantContextKeys[id] &&
+            isReusableGenerationResult(cached.result)
+            ? [[id, cached.result] as const]
+            : [];
+        }),
+      );
 
-    // Content/settings changed: drop in-flight work. Style-only toggles keep
-    // completed results and any still-running requests for other styles. When
-    // switching modes, restore completed results for the unchanged context.
+    // Content/settings changed: drop in-flight work. Completed results whose
+    // individual context is unchanged remain reusable. When switching modes,
+    // restore completed results for the unchanged variant contexts.
     if (contextChanged) {
       cancelAllGenerations();
       setGenerationResults((current) => {
-        let changed = false;
-        const next = { ...current };
-        for (const [id, value] of Object.entries(cachedResultsForContext)) {
-          if (!isReusableGenerationResult(value)) continue;
-          if (next[id] !== value) {
-            next[id] = value;
-            changed = true;
-          }
-        }
-        for (const [id, value] of Object.entries(next)) {
-          if (value.status === "streaming" || value.status === "idle") {
-            next[id] = { ...value, status: "completed" };
-            changed = true;
-          }
-        }
-        return changed ? next : current;
+        return Object.fromEntries(
+          selectedStyleIds.map((id) => [
+            id,
+            cachedResultsForContext[id] ??
+              (isReusableGenerationResult(current[id]) &&
+              modeCache.results[id]?.contextKey === variantContextKeys[id]
+                ? current[id]
+                : { text: "", status: "idle" as const }),
+          ]),
+        );
       });
     }
 
@@ -1265,12 +1295,12 @@ function App() {
             }
             const currentCache = generationCacheRef.current[workMode];
             generationCacheRef.current[workMode] = {
-              contextKey,
               results: {
-                ...(currentCache.contextKey === contextKey
-                  ? currentCache.results
-                  : {}),
-                [event.variantId]: result,
+                ...currentCache.results,
+                [event.variantId]: {
+                  contextKey: variantContextKeys[event.variantId],
+                  result,
+                },
               },
             };
             return {
@@ -1301,6 +1331,10 @@ function App() {
           variants: idsToGenerate.map((id) => ({
             id,
             styleId: id === "default" ? null : id,
+            transcreation:
+              workMode === "translate" &&
+              id !== "default" &&
+              transcreationByStyleId[id] === true,
           })),
         },
         onEvent,
@@ -1347,6 +1381,7 @@ function App() {
     styles,
     targetLanguage,
     mountGlossary,
+    transcreationByStyleId,
     workMode,
   ]);
 
@@ -1875,6 +1910,14 @@ function App() {
     });
   }
 
+  function toggleTranscreation(styleId: string) {
+    if (styleId === "default") return;
+    setTranscreationByStyleId((current) => ({
+      ...current,
+      [styleId]: current[styleId] !== true,
+    }));
+  }
+
   /** Source and target must differ; choosing the other side's language swaps them. */
   function changeSourceLanguage(next: string) {
     if (next !== "auto" && next === targetLanguage) {
@@ -1957,14 +2000,11 @@ function App() {
   function regenerateResult(versionId: string) {
     if (isGenerating) return;
     const currentCache = generationCacheRef.current[workMode];
-    if (currentCache.contextKey === generationContextRef.current) {
-      const nextCachedResults = { ...currentCache.results };
-      delete nextCachedResults[versionId];
-      generationCacheRef.current[workMode] = {
-        ...currentCache,
-        results: nextCachedResults,
-      };
-    }
+    const nextCachedResults = { ...currentCache.results };
+    delete nextCachedResults[versionId];
+    generationCacheRef.current[workMode] = {
+      results: nextCachedResults,
+    };
     setGenerationResults((current) => ({
       ...current,
       [versionId]: { text: "", status: "idle" },
@@ -3785,7 +3825,11 @@ function App() {
                 : "shrink-0"
             }
           >
-            <div className="flex items-center gap-2 px-3 py-2.5 pl-3">
+            <div
+              className={`flex items-center gap-2 ${
+                IS_MACOS ? "px-4 py-2" : "px-3 py-2.5 pl-3"
+              }`}
+            >
               <div className="flex shrink-0 items-center gap-2">
                 <div
                   className="relative grid grid-cols-2 rounded-lg bg-muted p-0.5"
@@ -3836,14 +3880,18 @@ function App() {
                   onLanguagePairSelect={applyLanguagePair}
                 />
               </div>
-              <WindowDragRegion className="flex items-center justify-end pr-1">
-                <Badge
-                  variant="secondary"
-                  className="pointer-events-none select-none font-normal tabular-nums"
-                >
-                  {APP_NAME} {APP_VERSION}
-                </Badge>
-              </WindowDragRegion>
+              {IS_MACOS ? (
+                <div className="min-w-0 flex-1" aria-hidden />
+              ) : (
+                <WindowDragRegion className="flex items-center justify-end pr-1">
+                  <Badge
+                    variant="secondary"
+                    className="pointer-events-none select-none font-normal tabular-nums"
+                  >
+                    {APP_NAME} {APP_VERSION}
+                  </Badge>
+                </WindowDragRegion>
+              )}
               {availableUpdate && updateCheckState === "available" ? (
                 <Button
                   variant="secondary"
@@ -4114,11 +4162,46 @@ function App() {
                         : "relative"
                     }
                   >
-                    {translationVersions.length > 1 && (
-                      <div className="border-b px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                        {version.name}
-                      </div>
-                    )}
+                    <div
+                      className={
+                        translationVersions.length > 1
+                          ? "flex items-center justify-between border-b px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                          : "flex items-center justify-between px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground"
+                      }
+                    >
+                      <span>{version.name}</span>
+                      {workMode === "translate" && version.id !== "default" ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <span className="inline-flex items-center gap-1.5 font-normal" />
+                              }
+                            >
+                              <Checkbox
+                                id={`transcreation-${version.id}`}
+                                checked={
+                                  transcreationByStyleId[version.id] === true
+                                }
+                                onCheckedChange={() =>
+                                  toggleTranscreation(version.id)
+                                }
+                                aria-label={`${t("transcreation")} ${version.name}`}
+                              />
+                              <Label
+                                htmlFor={`transcreation-${version.id}`}
+                                className="cursor-pointer text-xs font-normal text-muted-foreground"
+                              >
+                                {t("transcreation")}
+                              </Label>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-72">
+                              {t("transcreationTooltip")}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : null}
+                    </div>
                     <div className="relative">
                       {version.error ? (
                         <div className="whitespace-pre-wrap px-4 py-4 pr-24 text-base text-destructive">

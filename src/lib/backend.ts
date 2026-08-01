@@ -93,6 +93,7 @@ export type BackendSnapshot = {
 export type GenerationVariant = {
   id: string;
   styleId: string | null;
+  transcreation: boolean;
 };
 
 export type GenerationRequest = {

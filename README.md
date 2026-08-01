@@ -13,11 +13,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/StereoApp/trali/releases">Windows</a>
+  <a href="#download">Windows</a>
   ·
-  <a href="https://github.com/StereoApp/trali/releases">macOS</a>
+  <a href="#download">macOS</a>
   ·
-  <a href="https://github.com/StereoApp/trali/releases">Linux</a>
+  <a href="#download">Linux</a>
 </p>
 
 ---
@@ -82,6 +82,14 @@ Installers are on **[GitHub Releases](https://github.com/StereoApp/trali/release
 | Windows | MSI, NSIS `.exe` |
 | macOS | Apple Silicon and Intel `.dmg` |
 | Linux | `.AppImage`, `.deb` |
+
+> **Important:** If macOS says that “Trali” is damaged and cannot be opened, and you trust the download source, first drag the app into `Applications`, then open Terminal and run:
+>
+> ```bash
+> sudo xattr -dr com.apple.quarantine /Applications/Trali.app
+> ```
+>
+> Enter your Mac login password, then open Trali from `Applications`. This removes the quarantine flag macOS adds to files downloaded from the internet so the app can launch. It does not repair a genuinely corrupted file or sign the app, so use it only with a trusted copy.
 
 You need your own API key and network access to the provider you choose.
 
