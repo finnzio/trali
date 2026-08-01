@@ -195,7 +195,7 @@ const zhCN = {
   translateMode: "翻译",
   mountGlossary: "应用术语",
   addGlossaryTerm: "在{settings}中添加术语后开启",
-  proofreadMode: "语法",
+  proofreadMode: "润色",
   writingSuggestions: "修改建议",
   proofreadPreview: "建议",
   proofreadPreviewWithStyle:
@@ -446,7 +446,7 @@ const en: Messages = {
   translateMode: "Translate",
   mountGlossary: "Apply glossary",
   addGlossaryTerm: "Add terms in {settings} to enable",
-  proofreadMode: "Grammar",
+  proofreadMode: "Polish",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
   proofreadPreviewWithStyle:
@@ -689,7 +689,7 @@ const zhTW: Messages = {
   translateMode: "翻譯",
   mountGlossary: "套用術語集",
   addGlossaryTerm: "請先在{settings}中新增術語，再開啟",
-  proofreadMode: "文法",
+  proofreadMode: "潤色",
   writingSuggestions: "修改建議",
   proofreadPreview: "建議",
   proofreadPreviewWithStyle:
@@ -935,7 +935,7 @@ const ja: Messages = {
   translateMode: "翻訳",
   mountGlossary: "用語集を適用",
   addGlossaryTerm: "{settings}で用語を追加すると有効になります",
-  proofreadMode: "文法",
+  proofreadMode: "推敲",
   writingSuggestions: "修正提案",
   proofreadPreview: "提案",
   proofreadPreviewWithStyle:
@@ -1184,7 +1184,7 @@ const ko: Messages = {
   translateMode: "번역",
   mountGlossary: "용어집 적용",
   addGlossaryTerm: "{settings}에서 용어를 추가한 후 사용하세요",
-  proofreadMode: "문법",
+  proofreadMode: "윤색",
   writingSuggestions: "수정 제안",
   proofreadPreview: "제안",
   proofreadPreviewWithStyle:
@@ -1438,7 +1438,7 @@ const es: Messages = {
   translateMode: "Traducir",
   mountGlossary: "Aplicar glosario",
   addGlossaryTerm: "Añade términos en {settings} para activarlo",
-  proofreadMode: "Gramática",
+  proofreadMode: "Pulir",
   writingSuggestions: "Sugerencias",
   proofreadPreview: "Sugerencias",
   proofreadPreviewWithStyle:
@@ -1698,7 +1698,7 @@ const de: Messages = {
   translateMode: "Übersetzen",
   mountGlossary: "Glossar anwenden",
   addGlossaryTerm: "Zum Aktivieren Begriffe in den {settings} hinzufügen",
-  proofreadMode: "Grammatik",
+  proofreadMode: "Feinschliff",
   writingSuggestions: "Vorschläge",
   proofreadPreview: "Vorschläge",
   proofreadPreviewWithStyle:
@@ -1958,7 +1958,7 @@ const fr: Messages = {
   translateMode: "Traduire",
   mountGlossary: "Appliquer le glossaire",
   addGlossaryTerm: "Ajoutez des termes dans les {settings} pour activer",
-  proofreadMode: "Grammaire",
+  proofreadMode: "Peaufiner",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
   proofreadPreviewWithStyle:
@@ -2217,7 +2217,7 @@ const ptBR: Messages = {
   translateMode: "Traduzir",
   mountGlossary: "Aplicar glossário",
   addGlossaryTerm: "Adicione termos nas {settings} para ativar",
-  proofreadMode: "Gramática",
+  proofreadMode: "Polir",
   writingSuggestions: "Sugestões",
   proofreadPreview: "Sugestões",
   proofreadPreviewWithStyle:
@@ -2475,7 +2475,7 @@ const ru: Messages = {
   translateMode: "Перевод",
   mountGlossary: "Применить глоссарий",
   addGlossaryTerm: "Добавьте термины в {settings}, чтобы включить",
-  proofreadMode: "Грамматика",
+  proofreadMode: "Редактура",
   writingSuggestions: "Предложения",
   proofreadPreview: "Предложения",
   proofreadPreviewWithStyle:

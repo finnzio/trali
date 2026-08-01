@@ -2926,7 +2926,7 @@ function App() {
 
             {settingsTab === "preferences" && (
               <div className="grid w-full gap-3">
-                <div className="order-1 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-1 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("interfaceLanguage")}</Label>
                   <Select
                     value={settingsLocale}
@@ -2951,7 +2951,7 @@ function App() {
                   </Select>
                 </div>
 
-                <div className="order-3 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-3 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                     <Label>{t("theme")}</Label>
                     <div className="grid grid-cols-3 rounded-lg bg-muted p-0.5">
                     {(["auto", "light", "dark"] as Theme[]).map((option) => (
@@ -2983,7 +2983,7 @@ function App() {
                     </div>
                 </div>
 
-                <div className="order-4 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-4 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                     <Label>{t("themeColor")}</Label>
                     <div className="flex gap-2">
                     {(
@@ -3031,7 +3031,7 @@ function App() {
                     </div>
                 </div>
 
-                <div className="order-5 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-5 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                     <Label>{t("cornerRadius")}</Label>
                     <div className="grid gap-0.5">
                       <Slider
@@ -3057,7 +3057,7 @@ function App() {
                     </div>
                 </div>
 
-                <div className="order-2 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-2 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("defaultTargetLanguage")}</Label>
                   <LanguageSelect
                     value={settingsTarget}
@@ -3141,7 +3141,7 @@ function App() {
                   )}
                 </div>
 
-                <div className="order-6 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-6 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("toggleShortcut")}</Label>
                   <div className="flex items-center justify-between gap-3 rounded-lg border px-2 py-1">
                     {toggleShortcut ? (
@@ -3196,7 +3196,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-7 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-7 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("closeBehavior")}</Label>
                   <Select
                     value={closeBehavior}
@@ -3221,7 +3221,7 @@ function App() {
                   </Select>
                 </div>
 
-                <div className="order-8 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-8 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="launch-at-startup">
                     {t("launchAtStartup")}
                   </Label>
@@ -3238,7 +3238,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-9 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-9 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="auto-check-updates">
                     {t("autoCheckUpdates")}
                   </Label>
@@ -3251,7 +3251,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-10 grid grid-cols-[7rem_1fr] items-center gap-3">
+                <div className="order-10 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("settingsTransfer")}</Label>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={exportSettings}>
@@ -3793,7 +3793,7 @@ function App() {
                 >
                   <span
                     aria-hidden
-                    className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-md bg-background shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${
+                    className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-md bg-primary shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none ${
                       workMode === "proofread"
                         ? "translate-x-full"
                         : "translate-x-0"
@@ -3806,8 +3806,8 @@ function App() {
                       size="sm"
                       className={`relative z-10 h-7 bg-transparent px-2.5 transition-colors duration-200 hover:bg-transparent ${
                         workMode === mode
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                          ? "text-primary-foreground hover:text-primary-foreground"
+                          : "text-muted-foreground hover:text-muted-foreground"
                       }`}
                       onClick={() => {
                         setWorkMode(mode);
@@ -3927,7 +3927,7 @@ function App() {
             <Separator
               aria-hidden
               role="presentation"
-              className="pointer-events-none absolute top-1/2 transition-colors group-hover:bg-primary/60 group-data-[dragging=true]:bg-primary"
+              className="pointer-events-none absolute top-1/2 bg-border transition-colors dark:bg-foreground/30 group-hover:bg-primary/60 dark:group-hover:bg-primary/60 group-data-[dragging=true]:bg-primary dark:group-data-[dragging=true]:bg-primary"
             />
             <Button
               variant="outline"
