@@ -46,20 +46,48 @@ impl GlossaryStore {
 
     pub fn parse(text: &str) -> AppResult<GlossaryData> {
         let mut reader = csv::Reader::from_reader(text.as_bytes());
-        let languages = reader
+        let headers = reader
             .headers()
             .map_err(|error| AppError::new("glossary_read_failed", error.to_string()))?
+            .clone();
+        let records = reader
+            .records()
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|error| AppError::new("glossary_read_failed", error.to_string()))?;
+        let columns = headers
             .iter()
-            .map(str::to_owned)
+            .enumerate()
+            .filter(|(index, _)| {
+                records.iter().any(|record| {
+                    record
+                        .get(*index)
+                        .is_some_and(|value| !value.trim().is_empty())
+                })
+            })
+            .map(|(index, language)| {
+                (
+                    index,
+                    language
+                        .strip_prefix('\u{feff}')
+                        .unwrap_or(language)
+                        .to_owned(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let languages = columns
+            .iter()
+            .map(|(_, language)| language.clone())
             .collect::<Vec<_>>();
         let mut concepts = Vec::new();
-        for record in reader.records() {
-            let record =
-                record.map_err(|error| AppError::new("glossary_read_failed", error.to_string()))?;
-            let terms = languages
+        for record in records {
+            let terms = columns
                 .iter()
-                .zip(record.iter())
-                .map(|(language, value)| (language.clone(), value.to_owned()))
+                .map(|(index, language)| {
+                    (
+                        language.clone(),
+                        record.get(*index).unwrap_or_default().to_owned(),
+                    )
+                })
                 .collect();
             concepts.push(GlossaryRow {
                 id: uuid::Uuid::new_v4().to_string(),
@@ -90,8 +118,9 @@ impl GlossaryStore {
         let bytes = writer
             .into_inner()
             .map_err(|error| AppError::new("glossary_write_failed", error.to_string()))?;
-        String::from_utf8(bytes)
-            .map_err(|error| AppError::new("glossary_write_failed", error.to_string()))
+        let csv = String::from_utf8(bytes)
+            .map_err(|error| AppError::new("glossary_write_failed", error.to_string()))?;
+        Ok(format!("\u{feff}{csv}"))
     }
 
     pub fn save(&self, glossary: &GlossaryData) -> AppResult<()> {
@@ -119,5 +148,16 @@ mod tests {
         let decoded = GlossaryStore::parse(&encoded).unwrap();
         assert_eq!(decoded.languages, glossary.languages);
         assert_eq!(decoded.concepts[0].terms, glossary.concepts[0].terms);
+    }
+
+    #[test]
+    fn parse_ignores_empty_language_columns() {
+        let text = "en,zh-CN,ja\r\nhello,, \r\nworld,,\r\n";
+        let parsed = GlossaryStore::parse(text).unwrap();
+
+        assert_eq!(parsed.languages, vec!["en"]);
+        assert_eq!(parsed.concepts[0].terms.get("en"), Some(&"hello".into()));
+        assert_eq!(parsed.concepts[0].terms.contains_key("zh-CN"), false);
+        assert_eq!(parsed.concepts[0].terms.contains_key("ja"), false);
     }
 }

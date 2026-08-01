@@ -101,6 +101,7 @@ export type GenerationRequest = {
   sourceLanguage: string;
   targetLanguage: string;
   responseLanguage: string;
+  includeGlossary: boolean;
   variants: GenerationVariant[];
 };
 
@@ -182,6 +183,10 @@ export function importBackendSettings(text: string) {
 
 export function exportBackendGlossary() {
   return invoke<string>("export_glossary");
+}
+
+export function exportBackendGlossaryToFile(glossary: GlossaryData) {
+  return invoke<string>("export_glossary_to_file", { glossary });
 }
 
 export function importBackendGlossary(text: string) {

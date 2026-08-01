@@ -5,7 +5,7 @@ use std::{
 };
 
 use serde::Serialize;
-use tauri::{ipc::Channel, AppHandle, State};
+use tauri::{ipc::Channel, AppHandle, Manager, State};
 use tokio::sync::{Mutex, RwLock};
 use tokio_util::sync::CancellationToken;
 
@@ -137,6 +137,18 @@ pub async fn save_glossary(
 pub async fn export_glossary(state: State<'_, BackendState>) -> AppResult<String> {
     let glossary = state.glossary.read().await;
     GlossaryStore::export(&glossary)
+}
+
+#[tauri::command]
+pub fn export_glossary_to_file(app: AppHandle, glossary: GlossaryData) -> AppResult<String> {
+    let csv = GlossaryStore::export(&glossary)?;
+    let directory = app
+        .path()
+        .download_dir()
+        .map_err(|error| AppError::new("download_directory_unavailable", error.to_string()))?;
+    let path = directory.join("glossary.csv");
+    crate::storage::atomic_write(&path, csv.as_bytes(), "glossary-export")?;
+    Ok(path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]

@@ -29,6 +29,7 @@ pub struct GenerationRequest {
     pub source_language: String,
     pub target_language: String,
     pub response_language: String,
+    pub include_glossary: bool,
     pub variants: Vec<GenerationVariant>,
 }
 
@@ -136,6 +137,7 @@ pub async fn generate(
                     &request.target_language,
                     &request.response_language,
                     style.as_ref(),
+                    request.include_glossary,
                     &glossary,
                 ) {
                     Ok(prompt) => prompt,

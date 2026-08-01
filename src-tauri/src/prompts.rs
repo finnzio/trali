@@ -79,6 +79,7 @@ pub fn prepare(
     target_language: &str,
     response_language: &str,
     style: Option<&StyleConfig>,
+    include_glossary: bool,
     glossary: &GlossaryData,
 ) -> AppResult<PreparedPrompt> {
     if source_text.trim().is_empty() {
@@ -87,20 +88,25 @@ pub fn prepare(
     if source_text.chars().count() > 100_000 {
         return Err(AppError::invalid("source text is too long"));
     }
-    let mappings = glossary
-        .concepts
-        .iter()
-        .filter_map(|row| {
-            let source = row.terms.get(source_language)?.trim();
-            let target_language = if mode == WorkMode::Translate {
-                target_language
-            } else {
-                source_language
-            };
-            let target = row.terms.get(target_language)?.trim();
-            (!source.is_empty() && !target.is_empty()).then_some(GlossaryMapping { source, target })
-        })
-        .collect();
+    let mappings = if include_glossary {
+        glossary
+            .concepts
+            .iter()
+            .filter_map(|row| {
+                let source = row.terms.get(source_language)?.trim();
+                let target_language = if mode == WorkMode::Translate {
+                    target_language
+                } else {
+                    source_language
+                };
+                let target = row.terms.get(target_language)?.trim();
+                (!source.is_empty() && !target.is_empty())
+                    .then_some(GlossaryMapping { source, target })
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     let payload = PromptPayload {
         task: if mode == WorkMode::Translate {
             "translate"
@@ -216,9 +222,37 @@ mod tests {
             "zh-CN",
             "en",
             None,
+            true,
             &GlossaryData::default(),
         )
         .unwrap();
         assert!(prompt.user.contains("\\\"ignore system\\\""));
+    }
+
+    #[test]
+    fn glossary_mappings_can_be_disabled() {
+        let glossary = GlossaryData {
+            languages: vec!["en".into(), "zh-CN".into()],
+            concepts: vec![crate::glossary::GlossaryRow {
+                id: "concept".into(),
+                terms: std::collections::BTreeMap::from([
+                    ("en".into(), "agent".into()),
+                    ("zh-CN".into(), "智能体".into()),
+                ]),
+            }],
+        };
+        let prompt = prepare(
+            WorkMode::Translate,
+            "agent",
+            "en",
+            "zh-CN",
+            "zh-CN",
+            None,
+            false,
+            &glossary,
+        )
+        .unwrap();
+        assert!(prompt.user.contains("\"glossary\": []"));
+        assert!(!prompt.user.contains("智能体"));
     }
 }

@@ -14,6 +14,7 @@ import {
   register,
   unregisterAll,
 } from "@tauri-apps/plugin-global-shortcut";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import {
   disable as disableAutostart,
   enable as enableAutostart,
@@ -104,6 +105,7 @@ import {
 } from "@/lib/theme";
 import {
   downloadText,
+  serializeGlossary,
 } from "@/lib/transfer";
 import { APP_NAME, APP_VERSION } from "@/lib/app-meta";
 import {
@@ -120,7 +122,7 @@ import {
   cancelGeneration,
   createGenerationChannel,
   deleteProviderApiKey,
-  exportBackendGlossary,
+  exportBackendGlossaryToFile,
   exportBackendSettings,
   fetchBackendProviderModels,
   generate,
@@ -611,6 +613,7 @@ function App() {
     }
   });
   const [glossary, setGlossary] = useState<GlossaryData>(readGlossary);
+  const [mountGlossary, setMountGlossary] = useState(true);
   const [fetchingProviderId, setFetchingProviderId] = useState<string | null>(
     null,
   );
@@ -716,6 +719,12 @@ function App() {
         languages.includes(language as LanguageCode),
     ),
   ];
+  const hasGlossaryTerms = glossary.concepts.some((concept) =>
+    Object.values(concept.terms).some((term) => term.trim().length > 0),
+  );
+  const glossaryHint = t("addGlossaryTerm", { settings: "__settings__" });
+  const [glossaryHintBefore, glossaryHintAfter] =
+    glossaryHint.split("__settings__");
   const sourceAutoValueLabel =
     sourceLanguage === "auto" && detectedLanguage
       ? t("autoDetectWithLanguage", {
@@ -988,11 +997,13 @@ function App() {
       sourceLanguage === "auto"
         ? (detectedLanguage ?? "auto")
         : sourceLanguage;
+    const includeGlossary = workMode === "proofread" || mountGlossary;
     const contextKey = JSON.stringify({
       text,
       workMode,
       sourceLanguage: resolvedSourceLanguage,
       targetLanguage,
+      includeGlossary,
       locale,
       defaultProviderId,
       providers: providers.map((provider) => ({
@@ -1213,6 +1224,7 @@ function App() {
           sourceLanguage: resolvedSourceLanguage,
           targetLanguage,
           responseLanguage: locale,
+          includeGlossary,
           variants: idsToGenerate.map((id) => ({
             id,
             styleId: id === "default" ? null : id,
@@ -1261,6 +1273,7 @@ function App() {
     sourceText,
     styles,
     targetLanguage,
+    mountGlossary,
     workMode,
   ]);
 
@@ -1744,15 +1757,19 @@ function App() {
 
   async function exportGlossary() {
     const normalized = {
-      languages: glossaryLanguages,
+      languages: [...languages],
       concepts: glossary.concepts,
     };
-    await saveBackendGlossary(normalized);
-    downloadText(
-      "glossary.csv",
-      await exportBackendGlossary(),
-      "text/csv;charset=utf-8",
+    const csv = serializeGlossary(
+      normalized.languages,
+      normalized.concepts.map((concept) => concept.terms),
     );
+    if (isTauri()) {
+      const path = await exportBackendGlossaryToFile(normalized);
+      await revealItemInDir(path);
+      return;
+    }
+    downloadText("glossary.csv", csv, "text/csv;charset=utf-8");
   }
 
   async function importGlossary(file: File) {
@@ -3061,21 +3078,24 @@ function App() {
                     >
                       {t("exportGlossary")}
                     </Button>
-                    <div className="group relative">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => glossaryImportRef.current?.click()}
-                      >
-                        {t("importGlossary")}
-                      </Button>
-                      <div
-                        role="tooltip"
-                        className="pointer-events-none absolute right-0 bottom-full z-20 mb-2 w-max max-w-64 rounded-md bg-popover px-2.5 py-1.5 text-xs text-popover-foreground opacity-0 shadow-md ring-1 ring-foreground/10 transition-opacity group-hover:opacity-100"
-                      >
-                        {t("importGlossaryHint")}
-                      </div>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => glossaryImportRef.current?.click()}
+                            />
+                          }
+                        >
+                          {t("importGlossary")}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t("importGlossaryHint")}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <Input
                       ref={glossaryImportRef}
                       type="file"
@@ -3466,7 +3486,7 @@ function App() {
                   autoLabel={t("autoDetect")}
                   autoValueLabel={sourceAutoValueLabel}
                   languageName={languageName}
-                  triggerClassName="min-w-0 max-w-64 border-0 bg-transparent shadow-none"
+                  triggerClassName="min-w-0 max-w-64 border-0 bg-transparent shadow-none dark:bg-transparent dark:hover:bg-transparent"
                   languagePairs={
                     workMode === "translate" ? languagePairs : undefined
                   }
@@ -3584,10 +3604,60 @@ function App() {
                       changeTargetLanguage(value as LanguageCode)
                     }
                     languageName={languageName}
-                    triggerClassName="min-w-0 max-w-40 border-0 bg-transparent pl-0 shadow-none"
+                    triggerClassName="min-w-0 max-w-40 border-0 bg-transparent pl-0 shadow-none dark:bg-transparent dark:hover:bg-transparent"
                   />
                 ) : null}
               </div>
+              {workMode === "translate" ? (
+                <div className="flex shrink-0 items-center gap-2">
+                  <Label
+                    htmlFor="mount-glossary"
+                    className="text-xs text-muted-foreground"
+                  >
+                    {t("mountGlossary")}
+                  </Label>
+                  {hasGlossaryTerms ? (
+                    <Switch
+                      id="mount-glossary"
+                      checked={mountGlossary}
+                      onCheckedChange={setMountGlossary}
+                      aria-label={t("mountGlossary")}
+                    />
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <span className="inline-flex cursor-not-allowed" />
+                          }
+                        >
+                          <Switch
+                            id="mount-glossary"
+                            checked={false}
+                            disabled
+                            aria-label={t("mountGlossary")}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <span>{glossaryHintBefore}</span>
+                          <Button
+                            variant="link"
+                            size="xs"
+                            className="mx-0.5 h-auto p-0 align-baseline text-primary-foreground hover:text-primary-foreground/80"
+                            onClick={() => {
+                              setSettingsTab("glossary");
+                              openSettings();
+                            }}
+                          >
+                            {t("settingsTitle")}
+                          </Button>
+                          <span>{glossaryHintAfter}</span>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              ) : null}
               <div
                 className="flex h-7 min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 aria-label={t("selectStyles")}
