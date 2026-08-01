@@ -8,7 +8,7 @@
         "height": 600,
         "decorations": true,
         "shadow": true,
-        "titleBarStyle": "Visible"
+        "titleBarStyle": "Overlay"
       }
     ]
   },

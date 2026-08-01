@@ -16,7 +16,7 @@ export function WindowDragRegion({
   className?: string;
   children?: ReactNode;
 }) {
-  if (!isTauri() || IS_MACOS) {
+  if (!isTauri()) {
     return (
       <div
         className={cn("min-h-8 min-w-0 flex-1 select-none", className)}

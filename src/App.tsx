@@ -3827,7 +3827,9 @@ function App() {
           >
             <div
               className={`flex items-center gap-2 ${
-                IS_MACOS ? "px-4 py-2" : "px-3 py-2.5 pl-3"
+                IS_MACOS
+                  ? "mac-titlebar-row px-4 pt-8 pb-2"
+                  : "px-3 py-2.5 pl-3"
               }`}
             >
               <div className="flex shrink-0 items-center gap-2">
@@ -3880,18 +3882,16 @@ function App() {
                   onLanguagePairSelect={applyLanguagePair}
                 />
               </div>
-              {IS_MACOS ? (
-                <div className="min-w-0 flex-1" aria-hidden />
-              ) : (
-                <WindowDragRegion className="flex items-center justify-end pr-1">
+              <WindowDragRegion className="flex items-center justify-end pr-1">
+                {!IS_MACOS ? (
                   <Badge
                     variant="secondary"
                     className="pointer-events-none select-none font-normal tabular-nums"
                   >
                     {APP_NAME} {APP_VERSION}
                   </Badge>
-                </WindowDragRegion>
-              )}
+                ) : null}
+              </WindowDragRegion>
               {availableUpdate && updateCheckState === "available" ? (
                 <Button
                   variant="secondary"

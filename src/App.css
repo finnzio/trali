@@ -170,6 +170,19 @@
     --ring: oklch(0.705 0.213 47.604);
 }
 
+.mac-titlebar-row {
+    position: relative;
+}
+
+.mac-titlebar-row::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2rem;
+    background: var(--primary);
+    content: "";
+    pointer-events: none;
+}
+
 .transfer-status-icon {
     color: var(--primary);
     overflow: visible;
