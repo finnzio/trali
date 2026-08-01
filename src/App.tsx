@@ -46,6 +46,7 @@ import {
 import { TransferStatusIcon } from "@/components/transfer-status-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,12 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   isLocale,
   localeNativeNames,
   locales,
@@ -80,10 +87,14 @@ import {
   type TranslationKey,
 } from "@/lib/i18n";
 import {
+  DEFAULT_CUSTOM_THEME_COLOR,
+  isCustomThemeColor,
+  isThemeColor,
   useTheme,
   type RadiusPreset,
   type Theme,
   type ThemeColor,
+  type ThemeColorPreset,
 } from "@/lib/theme";
 import {
   downloadText,
@@ -214,6 +225,13 @@ type GenerationResult = {
   speakableText?: string;
   proofread?: ProofreadView;
 };
+
+type GenerationCacheEntry = {
+  contextKey: string | null;
+  results: Record<string, GenerationResult>;
+};
+
+type GenerationCache = Record<WorkMode, GenerationCacheEntry>;
 
 function isReusableGenerationResult(
   result: GenerationResult | undefined,
@@ -518,6 +536,7 @@ function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(
     () => window.localStorage.getItem(ALWAYS_ON_TOP_KEY) === "true",
   );
+  const windowExpandedRef = useRef(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [autostartReady, setAutostartReady] = useState(false);
   const [autostartUpdating, setAutostartUpdating] = useState(false);
@@ -527,6 +546,10 @@ function App() {
   >({});
   const generationResultsRef = useRef(generationResults);
   generationResultsRef.current = generationResults;
+  const generationCacheRef = useRef<GenerationCache>({
+    translate: { contextKey: null, results: {} },
+    proofread: { contextKey: null, results: {} },
+  });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
   /** Fingerprint of inputs that invalidate cached per-style results. */
   const generationContextRef = useRef<string | null>(null);
@@ -720,6 +743,47 @@ function App() {
 
   useEffect(() => {
     if (!isTauri()) return;
+    const appWindow = getCurrentWindow();
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+
+    const syncExpandedState = async () => {
+      const [fullscreen, maximized] = await Promise.all([
+        appWindow.isFullscreen(),
+        appWindow.isMaximized(),
+      ]);
+      const expanded = fullscreen || maximized;
+      if (cancelled) return;
+
+      if (expanded && !windowExpandedRef.current) {
+        windowExpandedRef.current = true;
+        setAlwaysOnTop(false);
+      } else if (!expanded) {
+        windowExpandedRef.current = false;
+      }
+    };
+
+    void syncExpandedState();
+    void appWindow
+      .onResized(() => {
+        void syncExpandedState();
+      })
+      .then((dispose) => {
+        if (cancelled) {
+          dispose();
+          return;
+        }
+        unlisten = dispose;
+      });
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauri()) return;
     void getCurrentWindow().setAlwaysOnTop(alwaysOnTop).catch(() => {
       // Browser preview does not expose Tauri window APIs.
     });
@@ -845,35 +909,56 @@ function App() {
     }
 
     const contextChanged = generationContextRef.current !== contextKey;
+    const modeCache = generationCacheRef.current[workMode];
+    const cachedResultsForContext =
+      modeCache.contextKey === contextKey ? modeCache.results : {};
 
     // Content/settings changed: drop in-flight work. Style-only toggles keep
-    // completed results and any still-running requests for other styles.
+    // completed results and any still-running requests for other styles. When
+    // switching modes, restore completed results for the unchanged context.
     if (contextChanged) {
       cancelAllGenerations();
       setGenerationResults((current) => {
         let changed = false;
-        const next = Object.fromEntries(
-          Object.entries(current).map(([id, value]) => {
-            if (value.status === "streaming" || value.status === "idle") {
-              changed = true;
-              return [id, { ...value, status: "completed" as const }];
-            }
-            return [id, value];
-          }),
-        );
+        const next = { ...current };
+        for (const [id, value] of Object.entries(cachedResultsForContext)) {
+          if (!isReusableGenerationResult(value)) continue;
+          if (next[id] !== value) {
+            next[id] = value;
+            changed = true;
+          }
+        }
+        for (const [id, value] of Object.entries(next)) {
+          if (value.status === "streaming" || value.status === "idle") {
+            next[id] = { ...value, status: "completed" };
+            changed = true;
+          }
+        }
         return changed ? next : current;
       });
     }
 
     const timeout = window.setTimeout(() => {
       const cached = generationResultsRef.current;
-      const idsToGenerate = contextChanged
-        ? [...selectedStyleIds]
-        : selectedStyleIds.filter(
-            (id) => !isReusableGenerationResult(cached[id]),
-          );
+      const resultsForContext = contextChanged
+        ? cachedResultsForContext
+        : cached;
+      const idsToGenerate = selectedStyleIds.filter(
+        (id) => !isReusableGenerationResult(resultsForContext[id]),
+      );
 
       if (idsToGenerate.length === 0) {
+        if (contextChanged) {
+          setGenerationResults((current) =>
+            Object.fromEntries(
+              selectedStyleIds.map((id) => [
+                id,
+                resultsForContext[id] ??
+                  current[id] ?? { text: "", status: "idle" as const },
+              ]),
+            ),
+          );
+        }
         generationContextRef.current = contextKey;
         return;
       }
@@ -886,7 +971,8 @@ function App() {
               id,
               idsToGenerate.includes(id)
                 ? { text: "", status: "streaming" as const }
-                : current[id] ?? { text: "", status: "idle" as const },
+                : resultsForContext[id] ??
+                  current[id] ?? { text: "", status: "idle" as const },
             ]),
           );
         }
@@ -929,6 +1015,7 @@ function App() {
             };
           }
           if (event.type === "completed") {
+            let result: GenerationResult;
             if (workMode === "proofread") {
               const normalized = normalizeProofreadOutput(previous.text, {
                 hasStyle: event.variantId !== "default",
@@ -936,39 +1023,48 @@ function App() {
                 emptyResult: t("proofreadEmptyResult"),
                 unexpectedFormat: t("proofreadUnexpectedFormat"),
               });
-              return {
-                ...current,
-                [event.variantId]: {
-                  ...previous,
-                  status: "completed",
-                  text:
-                    normalized.correctedText ??
-                    normalized.polishedText ??
-                    normalized.fallbackText ??
-                    previous.text,
-                  speakableText:
-                    normalized.speakableText ??
-                    event.speakableText ??
-                    undefined,
-                  proofread: {
-                    noIssues: normalized.noIssues,
-                    issuesText: normalized.issuesText,
-                    correctedText: normalized.correctedText,
-                    styleSuggestionsText: normalized.styleSuggestionsText,
-                    polishedText: normalized.polishedText,
-                    fallbackText: normalized.fallbackText,
-                    usedFallback: normalized.usedFallback,
-                  },
+              result = {
+                ...previous,
+                status: "completed",
+                text:
+                  normalized.correctedText ??
+                  normalized.polishedText ??
+                  normalized.fallbackText ??
+                  previous.text,
+                speakableText:
+                  normalized.speakableText ??
+                  event.speakableText ??
+                  undefined,
+                proofread: {
+                  noIssues: normalized.noIssues,
+                  issuesText: normalized.issuesText,
+                  correctedText: normalized.correctedText,
+                  styleSuggestionsText: normalized.styleSuggestionsText,
+                  polishedText: normalized.polishedText,
+                  fallbackText: normalized.fallbackText,
+                  usedFallback: normalized.usedFallback,
                 },
               };
-            }
-            return {
-              ...current,
-              [event.variantId]: {
+            } else {
+              result = {
                 ...previous,
                 status: "completed",
                 speakableText: event.speakableText ?? undefined,
+              };
+            }
+            const currentCache = generationCacheRef.current[workMode];
+            generationCacheRef.current[workMode] = {
+              contextKey,
+              results: {
+                ...(currentCache.contextKey === contextKey
+                  ? currentCache.results
+                  : {}),
+                [event.variantId]: result,
               },
+            };
+            return {
+              ...current,
+              [event.variantId]: result,
             };
           }
           return {
@@ -1069,10 +1165,8 @@ function App() {
       settings.theme === "light" || settings.theme === "dark"
         ? settings.theme
         : "auto";
-    const nextThemeColor: ThemeColor = (
-      ["neutral", "blue", "green", "violet", "orange"] as ThemeColor[]
-    ).includes(settings.themeColor as ThemeColor)
-      ? (settings.themeColor as ThemeColor)
+    const nextThemeColor: ThemeColor = isThemeColor(settings.themeColor)
+      ? settings.themeColor
       : "green";
     const nextRadius: RadiusPreset = radiusPresets.includes(
       settings.radius as RadiusPreset,
@@ -1642,6 +1736,15 @@ function App() {
 
   function regenerateResult(versionId: string) {
     if (isGenerating) return;
+    const currentCache = generationCacheRef.current[workMode];
+    if (currentCache.contextKey === generationContextRef.current) {
+      const nextCachedResults = { ...currentCache.results };
+      delete nextCachedResults[versionId];
+      generationCacheRef.current[workMode] = {
+        ...currentCache,
+        results: nextCachedResults,
+      };
+    }
     setGenerationResults((current) => ({
       ...current,
       [versionId]: { text: "", status: "idle" },
@@ -2527,7 +2630,7 @@ function App() {
                         ["green", "bg-green-600"],
                         ["violet", "bg-violet-600"],
                         ["orange", "bg-orange-600"],
-                      ] as Array<[ThemeColor, string]>
+                      ] as Array<[ThemeColorPreset, string]>
                     ).map(([color, swatchClass]) => (
                       <Button
                         key={color}
@@ -2551,6 +2654,17 @@ function App() {
                         </span>
                       </Button>
                     ))}
+                    <ColorPicker
+                      value={
+                        isCustomThemeColor(themeColor)
+                          ? themeColor
+                          : DEFAULT_CUSTOM_THEME_COLOR
+                      }
+                      onChange={(value) => {
+                        if (isCustomThemeColor(value)) setThemeColor(value);
+                      }}
+                      label={t("themeColorCustom")}
+                    />
                     </div>
                 </div>
 
@@ -3177,20 +3291,31 @@ function App() {
                 </Badge>
               </WindowDragRegion>
               <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  variant={alwaysOnTop ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => {
-                    const nextValue = !alwaysOnTop;
-                    setAlwaysOnTop(nextValue);
-                  }}
-                  aria-label={
-                    alwaysOnTop ? t("unpinWindow") : t("pinWindow")
-                  }
-                  aria-pressed={alwaysOnTop}
-                >
-                  <PinIcon />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant={alwaysOnTop ? "secondary" : "ghost"}
+                          size="icon-sm"
+                          onClick={() => {
+                            const nextValue = !alwaysOnTop;
+                            setAlwaysOnTop(nextValue);
+                          }}
+                          aria-label={
+                            alwaysOnTop ? t("unpinWindow") : t("pinWindow")
+                          }
+                          aria-pressed={alwaysOnTop}
+                        />
+                      }
+                    >
+                      <PinIcon />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {alwaysOnTop ? t("unpinWindow") : t("pinWindow")}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Button
                   variant="ghost"
                   size="icon-sm"

@@ -2,6 +2,25 @@ import type { ProviderType } from "@/lib/backend";
 
 const MODELS_DEV_API_URL = "https://models.dev/api.json";
 
+const FALLBACK_ENDPOINTS: Record<string, string> = {
+  openai: "https://api.openai.com/v1",
+  anthropic: "https://api.anthropic.com/v1",
+  google: "https://generativelanguage.googleapis.com/v1beta/openai",
+  xai: "https://api.x.ai/v1",
+  groq: "https://api.groq.com/openai/v1",
+  mistral: "https://api.mistral.ai/v1",
+  deepseek: "https://api.deepseek.com",
+  "alibaba-cn": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  alibaba: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "moonshotai-cn": "https://api.moonshot.cn/v1",
+  moonshotai: "https://api.moonshot.ai/v1",
+  zhipuai: "https://open.bigmodel.cn/api/paas/v4",
+  qianfan: "https://qianfan.baidubce.com/v2",
+  "volcengine-ark": "https://ark.cn-beijing.volces.com/api/v3",
+  siliconflow: "https://api.siliconflow.com/v1",
+  minimax: "https://api.minimaxi.com/v1",
+};
+
 type RawModelsDevProvider = {
   id?: unknown;
   name?: unknown;
@@ -75,6 +94,13 @@ function isUsableEndpoint(endpoint: string) {
   );
 }
 
+function readEndpoint(providerId: string, provider: RawModelsDevProvider) {
+  const catalogEndpoint = readString(provider.api);
+  return catalogEndpoint && isUsableEndpoint(catalogEndpoint)
+    ? catalogEndpoint
+    : FALLBACK_ENDPOINTS[providerId];
+}
+
 function parseModelsDevCatalog(payload: unknown): ModelsDevProvider[] {
   if (!isRecord(payload)) return [];
 
@@ -84,12 +110,12 @@ function parseModelsDevCatalog(payload: unknown): ModelsDevProvider[] {
 
       const provider = rawProvider as RawModelsDevProvider;
       const models = parseModels(provider);
-      const endpoint = readString(provider.api);
+      const id = readString(provider.id) ?? providerKey;
+      const endpoint = readEndpoint(id, provider);
       if (models.length === 0 || !endpoint || !isUsableEndpoint(endpoint)) {
         return [];
       }
 
-      const id = readString(provider.id) ?? providerKey;
       return [
         {
           id,
