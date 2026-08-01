@@ -84,6 +84,26 @@ const zhCN = {
   backToTranslator: "返回翻译",
   providerTitle: "服务商",
   providerDescription: "配置用于翻译的模型服务和连接方式。",
+  providerSetupEyebrow: "还差一步",
+  providerSetupTitle: "先连接一个模型服务商",
+  providerSetupDescription:
+    "Trali 负责文本编辑、任务管理和结果整理；真正生成翻译或语法建议，需要通过你选择的模型服务商完成。",
+  providerSetupAction: "配置第一个服务商",
+  providerSetupSecureNote:
+    "API Key 使用系统安全存储，不会写入普通设置文件。",
+  providerSetupWhyTitle: "如何获取",
+  providerSetupWhyDescription:
+    "选择支持 OpenAI-compatible 或 Anthropic-compatible API 的服务商，在其官网注册并创建 API Key，然后将端点、密钥和模型填写到设置中。",
+  providerSetupStepsTitle: "配置步骤",
+  providerSetupStep1Title: "选择服务商",
+  providerSetupStep1Description:
+    "选择支持 OpenAI-compatible 或 Anthropic-compatible API 的平台。",
+  providerSetupStep2Title: "获取 API Key",
+  providerSetupStep2Description:
+    "在服务商官网注册账号，创建 API Key，并确认账户有可用额度。",
+  providerSetupStep3Title: "填写连接信息",
+  providerSetupStep3Description:
+    "回到设置 → 服务商，选择预设或填写端点、API Key 和模型名，然后测试连接。",
   addProvider: "添加服务商",
   providerEmpty: "还没有服务商，点击右上角添加。",
   providerDefaultName: "服务商",
@@ -260,6 +280,26 @@ const en: Messages = {
   providerTitle: "Providers",
   providerDescription:
     "Configure the model services and connections used for translation.",
+  providerSetupEyebrow: "One connection to go",
+  providerSetupTitle: "Connect a model provider to begin",
+  providerSetupDescription:
+    "Trali handles your workspace, prompts, and results. A model provider is what turns your text into translations or proofreading suggestions.",
+  providerSetupAction: "Configure your first provider",
+  providerSetupSecureNote:
+    "Your API key is stored in the system credential store, separate from ordinary settings.",
+  providerSetupWhyTitle: "How to get a provider",
+  providerSetupWhyDescription:
+    "Choose a service with an OpenAI-compatible or Anthropic-compatible API, create an account and API key on its website, then add the endpoint, key, and model in Settings.",
+  providerSetupStepsTitle: "Setup steps",
+  providerSetupStep1Title: "Choose a provider",
+  providerSetupStep1Description:
+    "Pick a service that supports an OpenAI-compatible or Anthropic-compatible API.",
+  providerSetupStep2Title: "Get an API key",
+  providerSetupStep2Description:
+    "Create an account on the provider's website, generate an API key, and make sure the account has available credit.",
+  providerSetupStep3Title: "Add the connection",
+  providerSetupStep3Description:
+    "Return to Settings → Providers, choose a preset or enter the endpoint, API key, and model, then test the connection.",
   addProvider: "Add provider",
   providerEmpty: "No providers yet. Add one to get started.",
   providerDefaultName: "Provider",
@@ -438,6 +478,26 @@ const zhTW: Messages = {
   backToTranslator: "返回翻譯",
   providerTitle: "服務商",
   providerDescription: "設定用於翻譯的模型服務與連線方式。",
+  providerSetupEyebrow: "還差一步",
+  providerSetupTitle: "先連接一個模型服務商",
+  providerSetupDescription:
+    "Trali 負責文字編輯、任務管理與結果整理；真正產生翻譯或文法建議，需要透過你選擇的模型服務商完成。",
+  providerSetupAction: "設定第一個服務商",
+  providerSetupSecureNote:
+    "API 金鑰會使用系統安全儲存，不會寫入一般設定檔。",
+  providerSetupWhyTitle: "如何取得",
+  providerSetupWhyDescription:
+    "選擇支援 OpenAI-compatible 或 Anthropic-compatible API 的服務商，在其官網註冊並建立 API 金鑰，然後將端點、金鑰與模型填入設定。",
+  providerSetupStepsTitle: "設定步驟",
+  providerSetupStep1Title: "選擇服務商",
+  providerSetupStep1Description:
+    "選擇支援 OpenAI-compatible 或 Anthropic-compatible API 的平台。",
+  providerSetupStep2Title: "取得 API 金鑰",
+  providerSetupStep2Description:
+    "在服務商官網註冊帳號、建立 API 金鑰，並確認帳戶有可用額度。",
+  providerSetupStep3Title: "填寫連線資訊",
+  providerSetupStep3Description:
+    "回到設定 → 服務商，選擇預設或填寫端點、API 金鑰與模型名稱，然後測試連線。",
   addProvider: "新增服務商",
   providerEmpty: "還沒有服務商，點右上角新增。",
   providerDefaultName: "服務商",
@@ -610,6 +670,26 @@ const ja: Messages = {
   backToTranslator: "翻訳に戻る",
   providerTitle: "プロバイダー",
   providerDescription: "翻訳に使うモデルサービスと接続を設定します。",
+  providerSetupEyebrow: "あと一歩です",
+  providerSetupTitle: "まずモデルプロバイダーに接続しましょう",
+  providerSetupDescription:
+    "Trali は文章の編集、タスク管理、結果の整理を担当します。翻訳や校正結果を生成するには、選択したモデルプロバイダーが必要です。",
+  providerSetupAction: "最初のプロバイダーを設定",
+  providerSetupSecureNote:
+    "API キーはシステムの安全な資格情報ストアに保存され、通常の設定ファイルには書き込まれません。",
+  providerSetupWhyTitle: "入手方法",
+  providerSetupWhyDescription:
+    "OpenAI 互換または Anthropic 互換 API に対応したサービスを選び、公式サイトでアカウントと API キーを作成してから、設定にエンドポイント、キー、モデルを入力します。",
+  providerSetupStepsTitle: "設定手順",
+  providerSetupStep1Title: "プロバイダーを選ぶ",
+  providerSetupStep1Description:
+    "OpenAI 互換または Anthropic 互換 API に対応したサービスを選びます。",
+  providerSetupStep2Title: "API キーを取得",
+  providerSetupStep2Description:
+    "サービスの公式サイトでアカウントを作成し、API キーを発行して利用可能な残高を確認します。",
+  providerSetupStep3Title: "接続情報を入力",
+  providerSetupStep3Description:
+    "設定 → プロバイダーに戻り、プリセットを選ぶかエンドポイント、API キー、モデル名を入力して接続をテストします。",
   addProvider: "プロバイダーを追加",
   providerEmpty: "プロバイダーがありません。右上から追加してください。",
   providerDefaultName: "プロバイダー",
@@ -790,6 +870,26 @@ const ko: Messages = {
   backToTranslator: "번역으로 돌아가기",
   providerTitle: "프로바이더",
   providerDescription: "번역에 사용할 모델 서비스와 연결을 구성합니다.",
+  providerSetupEyebrow: "한 단계만 더",
+  providerSetupTitle: "모델 프로바이더를 연결하고 시작하세요",
+  providerSetupDescription:
+    "Trali는 텍스트 편집, 작업 관리, 결과 정리를 담당합니다. 번역이나 교정 결과를 생성하려면 선택한 모델 프로바이더가 필요합니다.",
+  providerSetupAction: "첫 프로바이더 설정",
+  providerSetupSecureNote:
+    "API 키는 시스템의 안전한 자격 증명 저장소에 보관되며 일반 설정 파일에는 기록되지 않습니다.",
+  providerSetupWhyTitle: "프로바이더를 얻는 방법",
+  providerSetupWhyDescription:
+    "OpenAI 호환 또는 Anthropic 호환 API를 지원하는 서비스를 선택하고 웹사이트에서 계정과 API 키를 만든 다음 설정에 엔드포인트, 키, 모델을 입력하세요.",
+  providerSetupStepsTitle: "설정 단계",
+  providerSetupStep1Title: "프로바이더 선택",
+  providerSetupStep1Description:
+    "OpenAI 호환 또는 Anthropic 호환 API를 지원하는 서비스를 선택하세요.",
+  providerSetupStep2Title: "API 키 발급",
+  providerSetupStep2Description:
+    "서비스 웹사이트에서 계정을 만들고 API 키를 발급한 뒤 사용 가능한 잔액을 확인하세요.",
+  providerSetupStep3Title: "연결 정보 입력",
+  providerSetupStep3Description:
+    "설정 → 프로바이더로 돌아와 프리셋을 선택하거나 엔드포인트, API 키, 모델명을 입력한 뒤 연결을 테스트하세요.",
   addProvider: "프로바이더 추가",
   providerEmpty: "프로바이더가 없습니다. 오른쪽 위에서 추가하세요.",
   providerDefaultName: "프로바이더",
@@ -971,6 +1071,26 @@ const es: Messages = {
   providerTitle: "Proveedores",
   providerDescription:
     "Configura los servicios de modelo y las conexiones usadas para traducir.",
+  providerSetupEyebrow: "Solo falta un paso",
+  providerSetupTitle: "Conecta un proveedor de modelos para empezar",
+  providerSetupDescription:
+    "Trali gestiona tu espacio de trabajo, las instrucciones y los resultados. El proveedor de modelos convierte tu texto en traducciones o sugerencias de corrección.",
+  providerSetupAction: "Configurar mi primer proveedor",
+  providerSetupSecureNote:
+    "La clave API se guarda en el almacén seguro de credenciales del sistema, separada de los ajustes normales.",
+  providerSetupWhyTitle: "Cómo obtener un proveedor",
+  providerSetupWhyDescription:
+    "Elige un servicio compatible con una API compatible con OpenAI o Anthropic, crea una cuenta y una clave API en su sitio web y añade el endpoint, la clave y el modelo en Ajustes.",
+  providerSetupStepsTitle: "Pasos de configuración",
+  providerSetupStep1Title: "Elige un proveedor",
+  providerSetupStep1Description:
+    "Elige un servicio compatible con una API compatible con OpenAI o Anthropic.",
+  providerSetupStep2Title: "Obtén una clave API",
+  providerSetupStep2Description:
+    "Crea una cuenta en el sitio del proveedor, genera una clave API y comprueba que tengas crédito disponible.",
+  providerSetupStep3Title: "Añade la conexión",
+  providerSetupStep3Description:
+    "Vuelve a Ajustes → Proveedores, elige un ajuste predeterminado o introduce el endpoint, la clave API y el modelo; después prueba la conexión.",
   addProvider: "Añadir proveedor",
   providerEmpty: "Aún no hay proveedores. Añade uno para empezar.",
   providerDefaultName: "Proveedor",
@@ -1157,6 +1277,26 @@ const de: Messages = {
   providerTitle: "Anbieter",
   providerDescription:
     "Konfigurieren Sie die Modelldienste und Verbindungen für die Übersetzung.",
+  providerSetupEyebrow: "Nur noch ein Schritt",
+  providerSetupTitle: "Verbinden Sie einen Modelldienst, um zu beginnen",
+  providerSetupDescription:
+    "Trali verwaltet Arbeitsbereich, Eingaben und Ergebnisse. Ein Modelldienst wandelt Ihren Text in Übersetzungen oder Korrekturvorschläge um.",
+  providerSetupAction: "Ersten Anbieter konfigurieren",
+  providerSetupSecureNote:
+    "Der API-Schlüssel wird im sicheren Anmeldedatenspeicher des Systems getrennt von den normalen Einstellungen gespeichert.",
+  providerSetupWhyTitle: "So erhalten Sie einen Anbieter",
+  providerSetupWhyDescription:
+    "Wählen Sie einen Dienst mit OpenAI-kompatibler oder Anthropic-kompatibler API, erstellen Sie dort ein Konto und einen API-Schlüssel und tragen Sie Endpunkt, Schlüssel und Modell in den Einstellungen ein.",
+  providerSetupStepsTitle: "Einrichtungsschritte",
+  providerSetupStep1Title: "Anbieter auswählen",
+  providerSetupStep1Description:
+    "Wählen Sie einen Dienst mit OpenAI-kompatibler oder Anthropic-kompatibler API.",
+  providerSetupStep2Title: "API-Schlüssel erhalten",
+  providerSetupStep2Description:
+    "Erstellen Sie auf der Website des Anbieters ein Konto, erzeugen Sie einen API-Schlüssel und prüfen Sie das verfügbare Guthaben.",
+  providerSetupStep3Title: "Verbindung hinzufügen",
+  providerSetupStep3Description:
+    "Kehren Sie zu Einstellungen → Anbieter zurück, wählen Sie eine Vorlage oder geben Sie Endpunkt, API-Schlüssel und Modell ein und testen Sie die Verbindung.",
   addProvider: "Anbieter hinzufügen",
   providerEmpty:
     "Noch keine Anbieter. Fügen Sie einen hinzu, um zu starten.",
@@ -1345,6 +1485,26 @@ const fr: Messages = {
   providerTitle: "Fournisseurs",
   providerDescription:
     "Configurez les services de modèle et les connexions utilisés pour la traduction.",
+  providerSetupEyebrow: "Encore une étape",
+  providerSetupTitle: "Connectez un fournisseur de modèles pour commencer",
+  providerSetupDescription:
+    "Trali gère votre espace de travail, vos instructions et vos résultats. Le fournisseur de modèles transforme votre texte en traductions ou en suggestions de correction.",
+  providerSetupAction: "Configurer mon premier fournisseur",
+  providerSetupSecureNote:
+    "La clé API est enregistrée dans le coffre-fort d’identifiants du système, séparément des réglages courants.",
+  providerSetupWhyTitle: "Comment en obtenir un",
+  providerSetupWhyDescription:
+    "Choisissez un service compatible avec une API compatible OpenAI ou Anthropic, créez un compte et une clé API sur son site, puis ajoutez le point de terminaison, la clé et le modèle dans les réglages.",
+  providerSetupStepsTitle: "Étapes de configuration",
+  providerSetupStep1Title: "Choisir un fournisseur",
+  providerSetupStep1Description:
+    "Choisissez un service compatible avec une API compatible OpenAI ou Anthropic.",
+  providerSetupStep2Title: "Obtenir une clé API",
+  providerSetupStep2Description:
+    "Créez un compte sur le site du fournisseur, générez une clé API et vérifiez que votre compte dispose de crédits.",
+  providerSetupStep3Title: "Ajouter la connexion",
+  providerSetupStep3Description:
+    "Revenez dans Réglages → Fournisseurs, choisissez un préréglage ou saisissez le point de terminaison, la clé API et le modèle, puis testez la connexion.",
   addProvider: "Ajouter un fournisseur",
   providerEmpty:
     "Aucun fournisseur pour le moment. Ajoutez-en un pour commencer.",
@@ -1533,6 +1693,26 @@ const ptBR: Messages = {
   providerTitle: "Provedores",
   providerDescription:
     "Configure os serviços de modelo e as conexões usadas na tradução.",
+  providerSetupEyebrow: "Falta apenas um passo",
+  providerSetupTitle: "Conecte um provedor de modelos para começar",
+  providerSetupDescription:
+    "O Trali gerencia seu espaço de trabalho, instruções e resultados. O provedor de modelos transforma seu texto em traduções ou sugestões de revisão.",
+  providerSetupAction: "Configurar meu primeiro provedor",
+  providerSetupSecureNote:
+    "A chave de API é armazenada no cofre seguro de credenciais do sistema, separada das configurações comuns.",
+  providerSetupWhyTitle: "Como obter um provedor",
+  providerSetupWhyDescription:
+    "Escolha um serviço compatível com uma API compatível com OpenAI ou Anthropic, crie uma conta e uma chave de API no site e informe o endpoint, a chave e o modelo nas configurações.",
+  providerSetupStepsTitle: "Etapas de configuração",
+  providerSetupStep1Title: "Escolha um provedor",
+  providerSetupStep1Description:
+    "Escolha um serviço compatível com uma API compatível com OpenAI ou Anthropic.",
+  providerSetupStep2Title: "Obtenha uma chave de API",
+  providerSetupStep2Description:
+    "Crie uma conta no site do provedor, gere uma chave de API e confirme que há créditos disponíveis.",
+  providerSetupStep3Title: "Adicione a conexão",
+  providerSetupStep3Description:
+    "Volte a Configurações → Provedores, escolha uma predefinição ou informe o endpoint, a chave de API e o modelo; depois teste a conexão.",
   addProvider: "Adicionar provedor",
   providerEmpty: "Ainda não há provedores. Adicione um para começar.",
   providerDefaultName: "Provedor",
@@ -1718,6 +1898,26 @@ const ru: Messages = {
   providerTitle: "Провайдеры",
   providerDescription:
     "Настройте модельные сервисы и подключения для перевода.",
+  providerSetupEyebrow: "Остался один шаг",
+  providerSetupTitle: "Подключите провайдера моделей, чтобы начать",
+  providerSetupDescription:
+    "Trali управляет рабочим пространством, инструкциями и результатами. Провайдер моделей превращает ваш текст в перевод или предложения по исправлению.",
+  providerSetupAction: "Настроить первого провайдера",
+  providerSetupSecureNote:
+    "API-ключ хранится в защищённом системном хранилище учётных данных отдельно от обычных настроек.",
+  providerSetupWhyTitle: "Как получить провайдера",
+  providerSetupWhyDescription:
+    "Выберите сервис с API, совместимым с OpenAI или Anthropic, создайте аккаунт и API-ключ на его сайте, затем добавьте конечную точку, ключ и модель в настройках.",
+  providerSetupStepsTitle: "Шаги настройки",
+  providerSetupStep1Title: "Выберите провайдера",
+  providerSetupStep1Description:
+    "Выберите сервис с API, совместимым с OpenAI или Anthropic.",
+  providerSetupStep2Title: "Получите API-ключ",
+  providerSetupStep2Description:
+    "Зарегистрируйтесь на сайте провайдера, создайте API-ключ и проверьте наличие доступного баланса.",
+  providerSetupStep3Title: "Добавьте подключение",
+  providerSetupStep3Description:
+    "Вернитесь в Настройки → Провайдеры, выберите пресет или укажите конечную точку, API-ключ и модель, затем проверьте подключение.",
   addProvider: "Добавить провайдера",
   providerEmpty: "Провайдеров пока нет. Добавьте одного, чтобы начать.",
   providerDefaultName: "Провайдер",
