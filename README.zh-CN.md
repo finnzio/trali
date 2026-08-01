@@ -81,7 +81,7 @@ Trali 是一个**轻量级的桌面 AI 翻译器和写作助手**。你自带模
 |------|--------|
 | Windows | MSI、NSIS `.exe` |
 | macOS | Apple Silicon 与 Intel `.dmg` |
-| Linux | `.AppImage`、`.deb`、`.rpm` |
+| Linux | `.AppImage`、`.deb` |
 
 你需要自备 API Key，并能访问所选服务商。
 

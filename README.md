@@ -81,7 +81,7 @@ Installers are on **[GitHub Releases](https://github.com/StereoApp/trali/release
 |----------|----------|
 | Windows | MSI, NSIS `.exe` |
 | macOS | Apple Silicon and Intel `.dmg` |
-| Linux | `.AppImage`, `.deb`, `.rpm` |
+| Linux | `.AppImage`, `.deb` |
 
 You need your own API key and network access to the provider you choose.
 
