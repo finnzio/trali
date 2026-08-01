@@ -149,12 +149,12 @@ export function serializeGlossary(
   languages: string[],
   rows: Array<Record<string, string>>,
 ) {
-  return [
+  return `\uFEFF${[
     languages.map(csvCell).join(","),
     ...rows.map((row) =>
       languages.map((language) => csvCell(row[language] ?? "")).join(","),
     ),
-  ].join("\r\n");
+  ].join("\r\n")}`;
 }
 
 export function parseGlossary(text: string) {
@@ -188,7 +188,12 @@ export function parseGlossary(text: string) {
   row.push(cell);
   if (row.some(Boolean)) rows.push(row);
 
-  return { languages: rows[0] ?? [], rows: rows.slice(1) };
+  return {
+    languages: (rows[0] ?? []).map((language, index) =>
+      index === 0 ? language.replace(/^\uFEFF/u, "") : language,
+    ),
+    rows: rows.slice(1),
+  };
 }
 
 export function downloadText(
@@ -200,6 +205,8 @@ export function downloadText(
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -192,6 +192,8 @@ const zhCN = {
   translationPreviewWithStyle: "{style}：翻译模型将在这里输出{language}译文。",
   swapSourceAndTranslation: "交换原文、译文及语言",
   translateMode: "翻译",
+  mountGlossary: "应用术语",
+  addGlossaryTerm: "在{settings}中添加术语后开启",
   proofreadMode: "语法",
   writingSuggestions: "修改建议",
   proofreadPreview: "建议",
@@ -418,7 +420,9 @@ const en: Messages = {
     "{style}: The translation model will output the {language} version here.",
   swapSourceAndTranslation: "Swap source, translation, and languages",
   translateMode: "Translate",
-  proofreadMode: "Grammar check",
+  mountGlossary: "Apply glossary",
+  addGlossaryTerm: "Add terms in {settings} to enable",
+  proofreadMode: "Grammar",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
   proofreadPreviewWithStyle:
@@ -636,6 +640,8 @@ const zhTW: Messages = {
   translationPreviewWithStyle: "{style}：翻譯模型將在這裡輸出{language}譯文。",
   swapSourceAndTranslation: "交換原文、譯文與語言",
   translateMode: "翻譯",
+  mountGlossary: "套用術語集",
+  addGlossaryTerm: "請先在{settings}中新增術語，再開啟",
   proofreadMode: "文法",
   writingSuggestions: "修改建議",
   proofreadPreview: "建議",
@@ -857,7 +863,9 @@ const ja: Messages = {
     "{style}：翻訳モデルがここに{language}の訳文を出力します。",
   swapSourceAndTranslation: "原文・訳文と言語を入れ替える",
   translateMode: "翻訳",
-  proofreadMode: "文法チェック",
+  mountGlossary: "用語集を適用",
+  addGlossaryTerm: "{settings}で用語を追加すると有効になります",
+  proofreadMode: "文法",
   writingSuggestions: "修正提案",
   proofreadPreview: "提案",
   proofreadPreviewWithStyle:
@@ -1081,7 +1089,9 @@ const ko: Messages = {
     "{style}: 번역 모델이 여기에 {language} 번역을 출력합니다.",
   swapSourceAndTranslation: "원문, 번역문 및 언어 바꾸기",
   translateMode: "번역",
-  proofreadMode: "문법 검사",
+  mountGlossary: "용어집 적용",
+  addGlossaryTerm: "{settings}에서 용어를 추가한 후 사용하세요",
+  proofreadMode: "문법",
   writingSuggestions: "수정 제안",
   proofreadPreview: "제안",
   proofreadPreviewWithStyle:
@@ -1310,7 +1320,9 @@ const es: Messages = {
   swapSourceAndTranslation:
     "Intercambiar texto de origen, traducción e idiomas",
   translateMode: "Traducir",
-  proofreadMode: "Revisión gramatical",
+  mountGlossary: "Aplicar glosario",
+  addGlossaryTerm: "Añade términos en {settings} para activarlo",
+  proofreadMode: "Gramática",
   writingSuggestions: "Sugerencias",
   proofreadPreview: "Sugerencias",
   proofreadPreviewWithStyle:
@@ -1544,7 +1556,9 @@ const de: Messages = {
   swapSourceAndTranslation:
     "Ausgangstext, Übersetzung und Sprachen tauschen",
   translateMode: "Übersetzen",
-  proofreadMode: "Grammatikprüfung",
+  mountGlossary: "Glossar anwenden",
+  addGlossaryTerm: "Zum Aktivieren Begriffe in den {settings} hinzufügen",
+  proofreadMode: "Grammatik",
   writingSuggestions: "Vorschläge",
   proofreadPreview: "Vorschläge",
   proofreadPreviewWithStyle:
@@ -1778,7 +1792,9 @@ const fr: Messages = {
   swapSourceAndTranslation:
     "Intervertir le texte source, la traduction et les langues",
   translateMode: "Traduire",
-  proofreadMode: "Vérification grammaticale",
+  mountGlossary: "Appliquer le glossaire",
+  addGlossaryTerm: "Ajoutez des termes dans les {settings} pour activer",
+  proofreadMode: "Grammaire",
   writingSuggestions: "Suggestions",
   proofreadPreview: "Suggestions",
   proofreadPreviewWithStyle:
@@ -2009,7 +2025,9 @@ const ptBR: Messages = {
     "{style}: o modelo de tradução mostrará aqui a versão em {language}.",
   swapSourceAndTranslation: "Trocar texto original, tradução e idiomas",
   translateMode: "Traduzir",
-  proofreadMode: "Verificação gramatical",
+  mountGlossary: "Aplicar glossário",
+  addGlossaryTerm: "Adicione termos nas {settings} para ativar",
+  proofreadMode: "Gramática",
   writingSuggestions: "Sugestões",
   proofreadPreview: "Sugestões",
   proofreadPreviewWithStyle:
@@ -2241,7 +2259,9 @@ const ru: Messages = {
   swapSourceAndTranslation:
     "Поменять местами исходный текст, перевод и языки",
   translateMode: "Перевод",
-  proofreadMode: "Проверка грамматики",
+  mountGlossary: "Применить глоссарий",
+  addGlossaryTerm: "Добавьте термины в {settings}, чтобы включить",
+  proofreadMode: "Грамматика",
   writingSuggestions: "Предложения",
   proofreadPreview: "Предложения",
   proofreadPreviewWithStyle:

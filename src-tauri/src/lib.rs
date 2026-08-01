@@ -128,6 +128,7 @@ pub fn run() {
             commands::migrate_legacy_data,
             commands::save_glossary,
             commands::export_glossary,
+            commands::export_glossary_to_file,
             commands::import_glossary,
             commands::export_settings,
             commands::import_settings,
