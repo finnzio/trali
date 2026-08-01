@@ -13,13 +13,52 @@ const THEME_COLOR_STORAGE_KEY = "translator.themeColor";
 const RADIUS_STORAGE_KEY = "translator.radius";
 
 export type Theme = "auto" | "light" | "dark";
-export type ThemeColor = "neutral" | "blue" | "green" | "violet" | "orange";
+export type ThemeColorPreset =
+  | "neutral"
+  | "blue"
+  | "green"
+  | "violet"
+  | "orange";
+export type CustomThemeColor = `#${string}`;
+export type ThemeColor = ThemeColorPreset | CustomThemeColor;
 export type RadiusPreset =
   | "square"
   | "compact"
   | "default"
   | "rounded"
   | "soft";
+
+export const DEFAULT_CUSTOM_THEME_COLOR = "#3b82f6";
+
+export function isCustomThemeColor(value: string): value is CustomThemeColor {
+  return /^#[0-9a-f]{6}$/iu.test(value);
+}
+
+export function isThemeColor(value: string): value is ThemeColor {
+  return (
+    ["neutral", "blue", "green", "violet", "orange"].includes(value) ||
+    isCustomThemeColor(value)
+  );
+}
+
+function readThemeColor(): ThemeColor {
+  const stored = window.localStorage.getItem(THEME_COLOR_STORAGE_KEY);
+  return stored && isThemeColor(stored) ? stored : "green";
+}
+
+function getThemeColorForeground(color: CustomThemeColor) {
+  const channels = [0, 2, 4].map((offset) =>
+    Number.parseInt(color.slice(offset + 1, offset + 3), 16) / 255,
+  );
+  const luminance = channels.reduce((total, channel, index) => {
+    const linear =
+      channel <= 0.03928
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    return total + linear * [0.2126, 0.7152, 0.0722][index];
+  }, 0);
+  return luminance > 0.55 ? "#0f172a" : "#ffffff";
+}
 
 function readTheme(): Theme {
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -42,15 +81,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readTheme);
-  const [themeColor, setThemeColorState] = useState<ThemeColor>(() => {
-    const stored = window.localStorage.getItem(THEME_COLOR_STORAGE_KEY);
-    return stored === "blue" ||
-      stored === "green" ||
-      stored === "violet" ||
-      stored === "orange"
-      ? stored
-      : "green";
-  });
+  const [themeColor, setThemeColorState] = useState<ThemeColor>(readThemeColor);
   const [radius, setRadiusState] = useState<RadiusPreset>(() => {
     const stored = window.localStorage.getItem(RADIUS_STORAGE_KEY);
     return stored === "square" ||
@@ -81,7 +112,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.dataset.themeColor = themeColor;
+    const root = document.documentElement;
+    if (isCustomThemeColor(themeColor)) {
+      root.dataset.themeColor = "custom";
+      root.style.setProperty("--custom-theme-color", themeColor);
+      root.style.setProperty(
+        "--custom-theme-color-foreground",
+        getThemeColorForeground(themeColor),
+      );
+      return;
+    }
+    root.dataset.themeColor = themeColor;
+    root.style.removeProperty("--custom-theme-color");
+    root.style.removeProperty("--custom-theme-color-foreground");
   }, [themeColor]);
 
   useEffect(() => {

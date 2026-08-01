@@ -46,6 +46,7 @@ import {
 import { TransferStatusIcon } from "@/components/transfer-status-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,12 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   isLocale,
   localeNativeNames,
   locales,
@@ -80,10 +87,14 @@ import {
   type TranslationKey,
 } from "@/lib/i18n";
 import {
+  DEFAULT_CUSTOM_THEME_COLOR,
+  isCustomThemeColor,
+  isThemeColor,
   useTheme,
   type RadiusPreset,
   type Theme,
   type ThemeColor,
+  type ThemeColorPreset,
 } from "@/lib/theme";
 import {
   downloadText,
@@ -126,6 +137,11 @@ import {
   type SpeechState,
   type StyleConfig,
 } from "@/lib/backend";
+import {
+  loadModelsDevProviders,
+  type ModelOption,
+  type ModelsDevProvider,
+} from "@/lib/models-dev";
 import "./App.css";
 
 const DEFAULT_TARGET_KEY = "translator.defaultTargetLanguage";
@@ -209,6 +225,13 @@ type GenerationResult = {
   speakableText?: string;
   proofread?: ProofreadView;
 };
+
+type GenerationCacheEntry = {
+  contextKey: string | null;
+  results: Record<string, GenerationResult>;
+};
+
+type GenerationCache = Record<WorkMode, GenerationCacheEntry>;
 
 function isReusableGenerationResult(
   result: GenerationResult | undefined,
@@ -468,8 +491,13 @@ function App() {
     null,
   );
   const [providerModels, setProviderModels] = useState<
-    Record<string, string[]>
+    Record<string, ModelOption[]>
   >({});
+  const [modelsDevProviders, setModelsDevProviders] = useState<
+    ModelsDevProvider[]
+  >([]);
+  const [providerSearch, setProviderSearch] = useState("");
+  const [modelsDevLoading, setModelsDevLoading] = useState(false);
   const [testingProviderId, setTestingProviderId] = useState<string | null>(
     null,
   );
@@ -508,6 +536,7 @@ function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(
     () => window.localStorage.getItem(ALWAYS_ON_TOP_KEY) === "true",
   );
+  const windowExpandedRef = useRef(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [autostartReady, setAutostartReady] = useState(false);
   const [autostartUpdating, setAutostartUpdating] = useState(false);
@@ -517,6 +546,10 @@ function App() {
   >({});
   const generationResultsRef = useRef(generationResults);
   generationResultsRef.current = generationResults;
+  const generationCacheRef = useRef<GenerationCache>({
+    translate: { contextKey: null, results: {} },
+    proofread: { contextKey: null, results: {} },
+  });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
   /** Fingerprint of inputs that invalidate cached per-style results. */
   const generationContextRef = useRef<string | null>(null);
@@ -642,6 +675,28 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!settingsOpen || settingsTab !== "provider") return;
+
+    let cancelled = false;
+    setProviderSearch("");
+    setModelsDevLoading(true);
+    void loadModelsDevProviders()
+      .then((providers) => {
+        if (!cancelled) setModelsDevProviders(providers);
+      })
+      .catch(() => {
+        // The provider's own /models endpoint remains available as a fallback.
+      })
+      .finally(() => {
+        if (!cancelled) setModelsDevLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [settingsOpen, settingsTab]);
+
+  useEffect(() => {
     if (!backendReady || !isTauri()) return;
     const timeout = window.setTimeout(() => {
       void saveBackendSettings(buildBackendSettings());
@@ -683,6 +738,47 @@ function App() {
     return () => {
       unlisten?.();
       void stopSpeech().catch(() => {});
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    const appWindow = getCurrentWindow();
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+
+    const syncExpandedState = async () => {
+      const [fullscreen, maximized] = await Promise.all([
+        appWindow.isFullscreen(),
+        appWindow.isMaximized(),
+      ]);
+      const expanded = fullscreen || maximized;
+      if (cancelled) return;
+
+      if (expanded && !windowExpandedRef.current) {
+        windowExpandedRef.current = true;
+        setAlwaysOnTop(false);
+      } else if (!expanded) {
+        windowExpandedRef.current = false;
+      }
+    };
+
+    void syncExpandedState();
+    void appWindow
+      .onResized(() => {
+        void syncExpandedState();
+      })
+      .then((dispose) => {
+        if (cancelled) {
+          dispose();
+          return;
+        }
+        unlisten = dispose;
+      });
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
     };
   }, []);
 
@@ -813,35 +909,56 @@ function App() {
     }
 
     const contextChanged = generationContextRef.current !== contextKey;
+    const modeCache = generationCacheRef.current[workMode];
+    const cachedResultsForContext =
+      modeCache.contextKey === contextKey ? modeCache.results : {};
 
     // Content/settings changed: drop in-flight work. Style-only toggles keep
-    // completed results and any still-running requests for other styles.
+    // completed results and any still-running requests for other styles. When
+    // switching modes, restore completed results for the unchanged context.
     if (contextChanged) {
       cancelAllGenerations();
       setGenerationResults((current) => {
         let changed = false;
-        const next = Object.fromEntries(
-          Object.entries(current).map(([id, value]) => {
-            if (value.status === "streaming" || value.status === "idle") {
-              changed = true;
-              return [id, { ...value, status: "completed" as const }];
-            }
-            return [id, value];
-          }),
-        );
+        const next = { ...current };
+        for (const [id, value] of Object.entries(cachedResultsForContext)) {
+          if (!isReusableGenerationResult(value)) continue;
+          if (next[id] !== value) {
+            next[id] = value;
+            changed = true;
+          }
+        }
+        for (const [id, value] of Object.entries(next)) {
+          if (value.status === "streaming" || value.status === "idle") {
+            next[id] = { ...value, status: "completed" };
+            changed = true;
+          }
+        }
         return changed ? next : current;
       });
     }
 
     const timeout = window.setTimeout(() => {
       const cached = generationResultsRef.current;
-      const idsToGenerate = contextChanged
-        ? [...selectedStyleIds]
-        : selectedStyleIds.filter(
-            (id) => !isReusableGenerationResult(cached[id]),
-          );
+      const resultsForContext = contextChanged
+        ? cachedResultsForContext
+        : cached;
+      const idsToGenerate = selectedStyleIds.filter(
+        (id) => !isReusableGenerationResult(resultsForContext[id]),
+      );
 
       if (idsToGenerate.length === 0) {
+        if (contextChanged) {
+          setGenerationResults((current) =>
+            Object.fromEntries(
+              selectedStyleIds.map((id) => [
+                id,
+                resultsForContext[id] ??
+                  current[id] ?? { text: "", status: "idle" as const },
+              ]),
+            ),
+          );
+        }
         generationContextRef.current = contextKey;
         return;
       }
@@ -854,7 +971,8 @@ function App() {
               id,
               idsToGenerate.includes(id)
                 ? { text: "", status: "streaming" as const }
-                : current[id] ?? { text: "", status: "idle" as const },
+                : resultsForContext[id] ??
+                  current[id] ?? { text: "", status: "idle" as const },
             ]),
           );
         }
@@ -897,6 +1015,7 @@ function App() {
             };
           }
           if (event.type === "completed") {
+            let result: GenerationResult;
             if (workMode === "proofread") {
               const normalized = normalizeProofreadOutput(previous.text, {
                 hasStyle: event.variantId !== "default",
@@ -904,39 +1023,48 @@ function App() {
                 emptyResult: t("proofreadEmptyResult"),
                 unexpectedFormat: t("proofreadUnexpectedFormat"),
               });
-              return {
-                ...current,
-                [event.variantId]: {
-                  ...previous,
-                  status: "completed",
-                  text:
-                    normalized.correctedText ??
-                    normalized.polishedText ??
-                    normalized.fallbackText ??
-                    previous.text,
-                  speakableText:
-                    normalized.speakableText ??
-                    event.speakableText ??
-                    undefined,
-                  proofread: {
-                    noIssues: normalized.noIssues,
-                    issuesText: normalized.issuesText,
-                    correctedText: normalized.correctedText,
-                    styleSuggestionsText: normalized.styleSuggestionsText,
-                    polishedText: normalized.polishedText,
-                    fallbackText: normalized.fallbackText,
-                    usedFallback: normalized.usedFallback,
-                  },
+              result = {
+                ...previous,
+                status: "completed",
+                text:
+                  normalized.correctedText ??
+                  normalized.polishedText ??
+                  normalized.fallbackText ??
+                  previous.text,
+                speakableText:
+                  normalized.speakableText ??
+                  event.speakableText ??
+                  undefined,
+                proofread: {
+                  noIssues: normalized.noIssues,
+                  issuesText: normalized.issuesText,
+                  correctedText: normalized.correctedText,
+                  styleSuggestionsText: normalized.styleSuggestionsText,
+                  polishedText: normalized.polishedText,
+                  fallbackText: normalized.fallbackText,
+                  usedFallback: normalized.usedFallback,
                 },
               };
-            }
-            return {
-              ...current,
-              [event.variantId]: {
+            } else {
+              result = {
                 ...previous,
                 status: "completed",
                 speakableText: event.speakableText ?? undefined,
+              };
+            }
+            const currentCache = generationCacheRef.current[workMode];
+            generationCacheRef.current[workMode] = {
+              contextKey,
+              results: {
+                ...(currentCache.contextKey === contextKey
+                  ? currentCache.results
+                  : {}),
+                [event.variantId]: result,
               },
+            };
+            return {
+              ...current,
+              [event.variantId]: result,
             };
           }
           return {
@@ -1037,10 +1165,8 @@ function App() {
       settings.theme === "light" || settings.theme === "dark"
         ? settings.theme
         : "auto";
-    const nextThemeColor: ThemeColor = (
-      ["neutral", "blue", "green", "violet", "orange"] as ThemeColor[]
-    ).includes(settings.themeColor as ThemeColor)
-      ? (settings.themeColor as ThemeColor)
+    const nextThemeColor: ThemeColor = isThemeColor(settings.themeColor)
+      ? settings.themeColor
       : "green";
     const nextRadius: RadiusPreset = radiusPresets.includes(
       settings.radius as RadiusPreset,
@@ -1120,6 +1246,45 @@ function App() {
       },
     ]);
     if (!defaultProviderId) setDefaultProviderId(id);
+  }
+
+  function getModelsDevProvider(provider: ProviderConfig) {
+    return modelsDevProviders.find(
+      (candidate) =>
+        candidate.name === provider.name &&
+        candidate.endpoint === provider.endpoint,
+    );
+  }
+
+  function applyModelsDevProvider(providerId: string, providerCatalogId: string) {
+    const catalogProvider = modelsDevProviders.find(
+      (provider) => provider.id === providerCatalogId,
+    );
+    if (!catalogProvider) return;
+
+    setProviderConnectionStatus((current) => {
+      const next = { ...current };
+      delete next[providerId];
+      return next;
+    });
+    setProviderModels((current) => {
+      const next = { ...current };
+      delete next[providerId];
+      return next;
+    });
+    saveProviders(
+      providers.map((provider) =>
+        provider.id === providerId
+          ? {
+              ...provider,
+              name: catalogProvider.name,
+              type: catalogProvider.type,
+              endpoint: catalogProvider.endpoint,
+            }
+          : provider,
+      ),
+    );
+    setProviderSearch("");
   }
 
   function updateProvider(
@@ -1343,7 +1508,7 @@ function App() {
       const models = await fetchBackendProviderModels(provider.id);
       setProviderModels((current) => ({
         ...current,
-        [provider.id]: models,
+        [provider.id]: models.map((model) => ({ id: model, name: model })),
       }));
     } catch {
       setProviderModels((current) => ({
@@ -1374,6 +1539,13 @@ function App() {
     } finally {
       setTestingProviderId(null);
     }
+  }
+
+  function getProviderModelOptions(provider: ProviderConfig) {
+    const fetchedModels = providerModels[provider.id];
+    if (fetchedModels) return fetchedModels;
+
+    return getModelsDevProvider(provider)?.models;
   }
 
   async function commitProviderApiKey(providerId: string) {
@@ -1564,6 +1736,15 @@ function App() {
 
   function regenerateResult(versionId: string) {
     if (isGenerating) return;
+    const currentCache = generationCacheRef.current[workMode];
+    if (currentCache.contextKey === generationContextRef.current) {
+      const nextCachedResults = { ...currentCache.results };
+      delete nextCachedResults[versionId];
+      generationCacheRef.current[workMode] = {
+        ...currentCache,
+        results: nextCachedResults,
+      };
+    }
     setGenerationResults((current) => ({
       ...current,
       [versionId]: { text: "", status: "idle" },
@@ -1743,6 +1924,14 @@ function App() {
     );
   }
 
+  const normalizedProviderSearch = providerSearch.trim().toLocaleLowerCase();
+  const filteredModelsDevProviders = modelsDevProviders.filter((provider) => {
+    if (!normalizedProviderSearch) return true;
+    return `${provider.name} ${provider.id}`
+      .toLocaleLowerCase()
+      .includes(normalizedProviderSearch);
+  });
+
   if (settingsOpen) {
     const tabs: Array<{ value: SettingsTab; label: string }> = [
       { value: "provider", label: t("settingsTabProvider") },
@@ -1755,9 +1944,9 @@ function App() {
     );
 
     return (
-      <main className="h-svh overflow-auto bg-muted/30">
-        <div className="mx-auto w-full max-w-2xl px-3 py-2 sm:px-4">
-          <header className="flex items-center gap-2">
+      <main className="flex h-svh flex-col overflow-hidden bg-muted/30">
+        <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col px-3 py-2 sm:px-4">
+          <header className="flex shrink-0 items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -1773,7 +1962,7 @@ function App() {
           </header>
 
           <div
-            className="relative mt-2 grid w-fit grid-cols-4 rounded-md bg-muted p-0.5"
+            className="relative mt-2 grid w-fit shrink-0 grid-cols-4 rounded-md bg-muted p-0.5"
             role="tablist"
             aria-label={t("settingsSections")}
           >
@@ -1808,7 +1997,7 @@ function App() {
           </div>
 
           <section
-            className="mt-3 rounded-xl border bg-card p-4"
+            className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl border bg-card p-4"
             role="tabpanel"
           >
             {settingsTab === "provider" && (
@@ -1932,6 +2121,55 @@ function App() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label>{t("providerPreset")}</Label>
+                        <Select
+                          value={getModelsDevProvider(provider)?.id ?? "custom"}
+                          onValueChange={(value) =>
+                            applyModelsDevProvider(provider.id, String(value))
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue>
+                              {getModelsDevProvider(provider)?.name ??
+                                t("providerCustom")}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent align="start" alignItemWithTrigger={false}>
+                            <Input
+                              value={providerSearch}
+                              placeholder={t("providerSearch")}
+                              aria-label={t("providerSearch")}
+                              className="mx-1 mb-1 w-[calc(100%-0.5rem)]"
+                              onPointerDown={(event) =>
+                                event.stopPropagation()
+                              }
+                              onKeyDown={(event) => event.stopPropagation()}
+                              onChange={(event) =>
+                                setProviderSearch(event.currentTarget.value)
+                              }
+                            />
+                            <SelectItem value="custom">
+                              {t("providerCustom")}
+                            </SelectItem>
+                            <SelectSeparator />
+                            {filteredModelsDevProviders.map((catalogProvider) => (
+                              <SelectItem
+                                key={catalogProvider.id}
+                                value={catalogProvider.id}
+                              >
+                                {catalogProvider.name}
+                              </SelectItem>
+                            ))}
+                            {!modelsDevLoading &&
+                              filteredModelsDevProviders.length === 0 && (
+                                <div className="px-1.5 py-2 text-sm text-muted-foreground">
+                                  {t("providerNoMatches")}
+                                </div>
+                              )}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="grid gap-1.5">
                         <Label>{t("providerType")}</Label>
                         <Select
@@ -2032,7 +2270,14 @@ function App() {
                       </div>
                       <div className="grid gap-1.5">
                         <div className="flex items-center justify-between gap-2">
-                          <Label>{t("providerModel")}</Label>
+                          <div className="flex items-center gap-2">
+                            <Label>{t("providerModel")}</Label>
+                            {modelsDevLoading && (
+                              <span className="text-xs text-muted-foreground">
+                                models.dev…
+                              </span>
+                            )}
+                          </div>
                           <Button
                             variant="ghost"
                             size="xs"
@@ -2052,7 +2297,7 @@ function App() {
                             {t("fetchModels")}
                           </Button>
                         </div>
-                        {providerModels[provider.id]?.length ? (
+                        {getProviderModelOptions(provider)?.length ? (
                           <Select
                             value={provider.model}
                             onValueChange={(value) =>
@@ -2069,9 +2314,11 @@ function App() {
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent align="start">
-                              {providerModels[provider.id].map((model) => (
-                                <SelectItem key={model} value={model}>
-                                  {model}
+                              {getProviderModelOptions(provider)?.map((model) => (
+                                <SelectItem key={model.id} value={model.id}>
+                                  {model.name === model.id
+                                    ? model.id
+                                    : `${model.name} · ${model.id}`}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -2315,7 +2562,7 @@ function App() {
             )}
 
             {settingsTab === "preferences" && (
-              <div className="grid max-w-xl gap-3">
+              <div className="grid w-full gap-3">
                 <div className="order-1 grid grid-cols-[7rem_1fr] items-center gap-3">
                   <Label>{t("interfaceLanguage")}</Label>
                   <Select
@@ -2383,7 +2630,7 @@ function App() {
                         ["green", "bg-green-600"],
                         ["violet", "bg-violet-600"],
                         ["orange", "bg-orange-600"],
-                      ] as Array<[ThemeColor, string]>
+                      ] as Array<[ThemeColorPreset, string]>
                     ).map(([color, swatchClass]) => (
                       <Button
                         key={color}
@@ -2407,6 +2654,17 @@ function App() {
                         </span>
                       </Button>
                     ))}
+                    <ColorPicker
+                      value={
+                        isCustomThemeColor(themeColor)
+                          ? themeColor
+                          : DEFAULT_CUSTOM_THEME_COLOR
+                      }
+                      onChange={(value) => {
+                        if (isCustomThemeColor(value)) setThemeColor(value);
+                      }}
+                      label={t("themeColorCustom")}
+                    />
                     </div>
                 </div>
 
@@ -3033,20 +3291,31 @@ function App() {
                 </Badge>
               </WindowDragRegion>
               <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  variant={alwaysOnTop ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => {
-                    const nextValue = !alwaysOnTop;
-                    setAlwaysOnTop(nextValue);
-                  }}
-                  aria-label={
-                    alwaysOnTop ? t("unpinWindow") : t("pinWindow")
-                  }
-                  aria-pressed={alwaysOnTop}
-                >
-                  <PinIcon />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant={alwaysOnTop ? "secondary" : "ghost"}
+                          size="icon-sm"
+                          onClick={() => {
+                            const nextValue = !alwaysOnTop;
+                            setAlwaysOnTop(nextValue);
+                          }}
+                          aria-label={
+                            alwaysOnTop ? t("unpinWindow") : t("pinWindow")
+                          }
+                          aria-pressed={alwaysOnTop}
+                        />
+                      }
+                    >
+                      <PinIcon />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {alwaysOnTop ? t("unpinWindow") : t("pinWindow")}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Button
                   variant="ghost"
                   size="icon-sm"
