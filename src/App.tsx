@@ -751,6 +751,7 @@ function App() {
   const activePanelDividerPointerIdRef = useRef<number | null>(null);
   const [sourcePanelRatio, setSourcePanelRatio] = useState(1 / 2);
   const [isPanelDividerDragging, setIsPanelDividerDragging] = useState(false);
+  const [disabledSwapClickCount, setDisabledSwapClickCount] = useState(0);
 
   const detectedLanguage = useMemo(
     () => inferLanguage(sourceText),
@@ -823,6 +824,12 @@ function App() {
     sourceLanguage !== "auto" || detectedLanguage !== null;
   const canSwapTranslation =
     !isGenerating && swapVersion !== undefined && hasResolvedSourceLanguage;
+
+  useEffect(() => {
+    if (canSwapTranslation) {
+      setDisabledSwapClickCount(0);
+    }
+  }, [canSwapTranslation]);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -2081,6 +2088,15 @@ function App() {
     } finally {
       setAutostartUpdating(false);
     }
+  }
+
+  function handleSwapButtonClick() {
+    if (!canSwapTranslation) {
+      setDisabledSwapClickCount((count) => Math.min(count + 1, 5));
+      return;
+    }
+
+    swapSourceAndTranslation();
   }
 
   function swapSourceAndTranslation() {
@@ -3923,13 +3939,25 @@ function App() {
               aria-label={t("swapSourceAndTranslation")}
               tabIndex={canSwapTranslation ? 0 : -1}
               onPointerDown={(event) => event.stopPropagation()}
-              onClick={swapSourceAndTranslation}
+              onClick={handleSwapButtonClick}
             >
-              <TransferStatusIcon
-                className="transfer-status-icon size-4"
-                loading={isGenerating}
-              />
-              <ArrowUpDownIcon className="transfer-swap-icon absolute size-4" />
+              {disabledSwapClickCount >= 5 ? (
+                <span
+                  aria-hidden="true"
+                  className="swap-easter-egg-emoji"
+                  onAnimationEnd={() => setDisabledSwapClickCount(0)}
+                >
+                  👋
+                </span>
+              ) : (
+                <>
+                  <TransferStatusIcon
+                    className="transfer-status-icon size-4"
+                    loading={isGenerating}
+                  />
+                  <ArrowUpDownIcon className="transfer-swap-icon absolute size-4" />
+                </>
+              )}
             </Button>
               </div>
 

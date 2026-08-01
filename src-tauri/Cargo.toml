@@ -1,6 +1,6 @@
 [package]
 name = "trali"
-version = "0.1.2"
+version = "0.1.3"
 description = "Trali desktop translator"
 authors = ["StereoApp"]
 edition = "2021"
