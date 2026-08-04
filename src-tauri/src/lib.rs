@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager,
+    AppHandle, Manager, Runtime, WebviewWindow,
 };
 
 mod commands;
@@ -19,6 +19,40 @@ mod storage;
 
 static CLOSE_TO_TRAY: AtomicBool = AtomicBool::new(true);
 
+trait WindowRestoreTarget {
+    fn unminimize_window(&self) -> Result<(), String>;
+    fn show_window(&self) -> Result<(), String>;
+    fn focus_window(&self) -> Result<(), String>;
+}
+
+impl<R: Runtime> WindowRestoreTarget for WebviewWindow<R> {
+    fn unminimize_window(&self) -> Result<(), String> {
+        self.unminimize().map_err(|error| error.to_string())
+    }
+
+    fn show_window(&self) -> Result<(), String> {
+        self.show().map_err(|error| error.to_string())
+    }
+
+    fn focus_window(&self) -> Result<(), String> {
+        self.set_focus().map_err(|error| error.to_string())
+    }
+}
+
+fn restore_window<W: WindowRestoreTarget>(window: &W) -> Result<(), String> {
+    window.unminimize_window()?;
+    window.show_window()?;
+    window.focus_window()
+}
+
+fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "main window is unavailable".to_string())?;
+
+    restore_window(&window)
+}
+
 fn toggle_main_window(app: &AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("main")
@@ -29,9 +63,7 @@ fn toggle_main_window(app: &AppHandle) -> Result<(), String> {
     if visible && !minimized {
         window.hide().map_err(|error| error.to_string())
     } else {
-        window.unminimize().map_err(|error| error.to_string())?;
-        window.show().map_err(|error| error.to_string())?;
-        window.set_focus().map_err(|error| error.to_string())
+        show_main_window(app)
     }
 }
 
@@ -47,7 +79,16 @@ fn set_close_to_tray(enabled: bool) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            let _ = show_main_window(app);
+        }));
+    }
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
@@ -88,11 +129,7 @@ pub fn run() {
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.unminimize();
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        let _ = show_main_window(app);
                     }
                     "quit" => {
                         if let Some(state) = app.try_state::<commands::BackendState>() {
@@ -152,4 +189,44 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::RefCell;
+
+    #[derive(Default)]
+    struct FakeWindow {
+        operations: RefCell<Vec<&'static str>>,
+    }
+
+    impl WindowRestoreTarget for FakeWindow {
+        fn unminimize_window(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push("unminimize");
+            Ok(())
+        }
+
+        fn show_window(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push("show");
+            Ok(())
+        }
+
+        fn focus_window(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push("focus");
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn second_instance_restores_hidden_main_window() {
+        let window = FakeWindow::default();
+
+        restore_window(&window).expect("failed to restore main window");
+
+        assert_eq!(
+            window.operations.into_inner(),
+            vec!["unminimize", "show", "focus"]
+        );
+    }
 }
