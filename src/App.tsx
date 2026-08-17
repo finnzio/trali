@@ -39,6 +39,7 @@ import {
   HouseIcon,
   InfoIcon,
   KeyRoundIcon,
+  Loader2Icon,
   PlusIcon,
   PlugZapIcon,
   RefreshCwIcon,
@@ -320,10 +321,14 @@ type ResultQuestionAskProps = {
   onQuestionChange: (value: string) => void;
   onSubmit: () => void;
   asking: boolean;
+  submittedQuestion: string;
   answer: string | null;
   error: string | null;
   placeholder: string;
   sendLabel: string;
+  askingLabel: string;
+  questionLabel: string;
+  answerLabel: string;
 };
 
 function ResultQuestionAsk({
@@ -331,10 +336,14 @@ function ResultQuestionAsk({
   onQuestionChange,
   onSubmit,
   asking,
+  submittedQuestion,
   answer,
   error,
   placeholder,
   sendLabel,
+  askingLabel,
+  questionLabel,
+  answerLabel,
 }: ResultQuestionAskProps) {
   function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (
@@ -347,37 +356,66 @@ function ResultQuestionAsk({
     }
   }
 
+  const showPair =
+    submittedQuestion.length > 0 &&
+    !asking &&
+    (answer != null || error != null);
+
   return (
-    <div className="grid gap-2 px-4 pb-3">
-      <div className="flex items-center gap-1.5">
-        <Input
-          value={question}
-          onChange={(event) =>
-            onQuestionChange(event.currentTarget.value)
-          }
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={asking}
-          autoComplete="off"
-        />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onSubmit}
-          disabled={asking || question.trim().length === 0}
-          aria-label={sendLabel}
-        >
-          <ArrowRightIcon />
-        </Button>
+    <div className="border-t border-border/70 px-4 pb-3 pt-2">
+      <div className="grid gap-2 rounded-lg bg-muted/50 p-2.5">
+        {showPair ? (
+          <div className="grid gap-1.5">
+            <div className="flex gap-2">
+              <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
+                {questionLabel}
+              </span>
+              <p className="min-w-0 text-sm whitespace-pre-wrap text-foreground">
+                {submittedQuestion}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
+                {answerLabel}
+              </span>
+              {error ? (
+                <p className="min-w-0 text-sm text-destructive/80">{error}</p>
+              ) : (
+                <p className="min-w-0 text-sm whitespace-pre-wrap text-foreground">
+                  {answer}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : null}
+        <div className="flex items-center gap-1.5">
+          <Input
+            value={question}
+            onChange={(event) =>
+              onQuestionChange(event.currentTarget.value)
+            }
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            autoComplete="off"
+            className="h-7 border-0 bg-transparent px-1.5 shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+          />
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={onSubmit}
+            disabled={asking || question.trim().length === 0}
+          >
+            {asking ? (
+              <>
+                <Loader2Icon className="animate-spin" />
+                {askingLabel}
+              </>
+            ) : (
+              sendLabel
+            )}
+          </Button>
+        </div>
       </div>
-      {answer ? (
-        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-          {answer}
-        </p>
-      ) : null}
-      {error ? (
-        <p className="text-sm text-destructive/80">{error}</p>
-      ) : null}
     </div>
   );
 }
@@ -833,6 +871,7 @@ function App() {
   });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
   const [askQuestion, setAskQuestion] = useState("");
+  const [askSubmittedQuestion, setAskSubmittedQuestion] = useState("");
   const [askAnswer, setAskAnswer] = useState<string | null>(null);
   const [askError, setAskError] = useState<string | null>(null);
   const [askStatus, setAskStatus] = useState<"idle" | "asking">("idle");
@@ -948,6 +987,7 @@ function App() {
 
   useEffect(() => {
     setAskQuestion("");
+    setAskSubmittedQuestion("");
     setAskAnswer(null);
     setAskError(null);
     setAskStatus("idle");
@@ -2211,6 +2251,8 @@ function App() {
       void cancelGeneration(previousRequestId).catch(() => {});
     }
     askRequestIdRef.current = requestId;
+    setAskSubmittedQuestion(question);
+    setAskQuestion("");
     setAskStatus("asking");
     setAskAnswer(null);
     setAskError(null);
@@ -4671,10 +4713,14 @@ function App() {
                         onQuestionChange={setAskQuestion}
                         onSubmit={submitResultQuestion}
                         asking={askStatus === "asking"}
+                        submittedQuestion={askSubmittedQuestion}
                         answer={askAnswer}
                         error={askError}
                         placeholder={t("askResultPlaceholder")}
                         sendLabel={t("askResultSend")}
+                        askingLabel={t("askResultAsking")}
+                        questionLabel={t("askResultQuestionLabel")}
+                        answerLabel={t("askResultAnswerLabel")}
                       />
                     ) : null}
                   </div>
