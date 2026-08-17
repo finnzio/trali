@@ -4882,7 +4882,7 @@ dependencies = [
 
 [[package]]
 name = "trali"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "csv",
  "futures-util",
