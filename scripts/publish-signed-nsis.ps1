@@ -84,11 +84,11 @@ if ([string]::IsNullOrWhiteSpace($sigText)) {
   throw "Updater signature file is empty: $releaseSig"
 }
 
-$assetApiUrl = & gh release view $tag --json assets --jq ".assets[] | select(.name==`"$assetName`") | .apiUrl" @repoArgs
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($assetApiUrl)) {
+$assetUrl = & gh release view $tag --json assets --jq ".assets[] | select(.name==`"$assetName`") | .url" @repoArgs
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($assetUrl)) {
   throw "Could not resolve the release asset URL for $assetName"
 }
-$assetApiUrl = $assetApiUrl.Trim()
+$assetUrl = $assetUrl.Trim()
 
 $sigFile = Join-Path $latestDir "windows-nsis.sig"
 Set-Content -LiteralPath $sigFile -Value $sigText -NoNewline -Encoding utf8NoBOM
@@ -116,7 +116,7 @@ fs.writeFileSync(latestPath, `${JSON.stringify(latest, null, 2)}\n`);
 '@ | Set-Content -LiteralPath $patchJs -Encoding utf8NoBOM
 
 Write-Host "Updating windows-x86_64-nsis signature in latest.json"
-& node $patchJs $latestPath $sigFile $assetApiUrl
+& node $patchJs $latestPath $sigFile $assetUrl
 if ($LASTEXITCODE -ne 0) {
   throw "Failed to patch latest.json (exit code $LASTEXITCODE)"
 }
