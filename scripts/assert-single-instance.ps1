@@ -113,9 +113,9 @@ function Get-TraliPid {
 }
 
 function Get-TraliWindows {
-  $pid = Get-TraliPid
-  if ($pid -eq 0) { return @() }
-  @([TraliWin]::FindOwned('Trali', $pid).ToArray())
+  $processId = Get-TraliPid
+  if ($processId -eq 0) { return @() }
+  @([TraliWin]::FindOwned('Trali', $processId).ToArray())
 }
 
 function Get-VisibleTraliWindows {
