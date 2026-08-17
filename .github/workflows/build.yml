@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
-    branches: [main]
+    branches: [main, codex/single-instance-tray]
   workflow_dispatch:
 
 concurrency:
@@ -111,3 +111,31 @@ jobs:
           releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
+
+  windows-single-instance:
+    name: windows-single-instance
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download NSIS installer
+        uses: actions/download-artifact@v4
+        with:
+          name: trali-windows-x64-nsis
+          path: installer
+
+      - name: Silent install and assert 1-6
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse installer | ForEach-Object { Write-Host $_.FullName }
+          $setup = Get-ChildItem -Path installer -Recurse -Filter '*setup.exe' | Select-Object -First 1
+          if (-not $setup) {
+            $setup = Get-ChildItem -Path installer -Recurse -Filter '*.exe' | Select-Object -First 1
+          }
+          if (-not $setup) { throw 'nsis installer not found in artifact' }
+          Write-Host "Installing $($setup.FullName)"
+          $proc = Start-Process -FilePath $setup.FullName -ArgumentList '/S' -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "installer exit $($proc.ExitCode)" }
+          pwsh -File scripts/assert-single-instance.ps1
