@@ -130,6 +130,8 @@ pub struct AppSettings {
     pub close_behavior: String,
     #[serde(default)]
     pub always_on_top: bool,
+    #[serde(default)]
+    pub fill_clipboard_on_shortcut: bool,
     #[serde(default = "default_auto_check_updates")]
     pub auto_check_updates: bool,
     #[serde(default = "default_work_mode")]
@@ -159,6 +161,7 @@ impl Default for AppSettings {
             default_target_language: default_target_language(),
             close_behavior: default_close_behavior(),
             always_on_top: false,
+            fill_clipboard_on_shortcut: false,
             auto_check_updates: default_auto_check_updates(),
             work_mode: default_work_mode(),
             selected_style_ids: default_selected_styles(),
@@ -313,5 +316,13 @@ mod tests {
         assert_eq!(decoded.default_provider_id.as_deref(), Some("provider"));
         assert!(!encoded.to_ascii_lowercase().contains("api_key"));
         assert!(!encoded.to_ascii_lowercase().contains("apikey"));
+    }
+
+    #[test]
+    fn fill_clipboard_on_shortcut_defaults_to_false() {
+        assert!(!AppSettings::default().fill_clipboard_on_shortcut);
+
+        let decoded: AppSettings = toml::from_str("version = 2").unwrap();
+        assert!(!decoded.fill_clipboard_on_shortcut);
     }
 }

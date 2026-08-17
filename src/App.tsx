@@ -725,6 +725,10 @@ function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(
     () => window.localStorage.getItem(ALWAYS_ON_TOP_KEY) === "true",
   );
+  const [fillClipboardOnShortcut, setFillClipboardOnShortcut] = useState(false);
+  const fillClipboardOnShortcutRef = useRef(false);
+  fillClipboardOnShortcutRef.current = fillClipboardOnShortcut;
+  const sourceInputRef = useRef<HTMLTextAreaElement>(null);
   const [autoCheckUpdates, setAutoCheckUpdates] = useState(true);
   const windowExpandedRef = useRef(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
@@ -922,6 +926,7 @@ function App() {
     alwaysOnTop,
     backendReady,
     closeBehavior,
+    fillClipboardOnShortcut,
     defaultProviderId,
     defaultTarget,
     languagePairs,
@@ -1061,7 +1066,29 @@ function App() {
           if (!toggleShortcut.trim()) return;
           return register(toggleShortcut, (event) => {
             if (event.state === "Pressed") {
-              void invoke("toggle_window");
+              if (!fillClipboardOnShortcutRef.current) {
+                void invoke("toggle_window");
+                return;
+              }
+              void (async () => {
+                await invoke("toggle_window");
+                try {
+                  const { readText } = await import(
+                    "@tauri-apps/plugin-clipboard-manager"
+                  );
+                  const text = await readText();
+                  if (typeof text !== "string" || text.length === 0) return;
+                  setSourceText(text);
+                  window.setTimeout(() => {
+                    const input = sourceInputRef.current;
+                    if (!input) return;
+                    input.focus();
+                    input.select();
+                  }, 0);
+                } catch {
+                  // Empty, denied, or non-text clipboard — leave the input unchanged.
+                }
+              })();
             }
           });
         })
@@ -1396,6 +1423,7 @@ function App() {
       defaultTargetLanguage: defaultTarget,
       closeBehavior,
       alwaysOnTop,
+      fillClipboardOnShortcut,
       autoCheckUpdates,
       workMode,
       selectedStyleIds,
@@ -1450,6 +1478,7 @@ function App() {
     setTargetLanguage(nextTarget);
     setCloseBehavior(settings.closeBehavior === "quit" ? "quit" : "tray");
     setAlwaysOnTop(Boolean(settings.alwaysOnTop));
+    setFillClipboardOnShortcut(Boolean(settings.fillClipboardOnShortcut));
     setAutoCheckUpdates(settings.autoCheckUpdates !== false);
     setWorkMode(
       settings.workMode === "proofread" ? "proofread" : "translate",
@@ -3236,7 +3265,27 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-7 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-7 grid grid-cols-[9rem_minmax(0,1fr)] items-start gap-3">
+                  <Label htmlFor="fill-clipboard-on-shortcut" className="pt-1">
+                    {t("fillClipboardOnShortcut")}
+                  </Label>
+                  <div className="grid gap-1.5">
+                    <Switch
+                      id="fill-clipboard-on-shortcut"
+                      checked={fillClipboardOnShortcut}
+                      onCheckedChange={setFillClipboardOnShortcut}
+                      aria-describedby="fill-clipboard-on-shortcut-hint"
+                    />
+                    <p
+                      id="fill-clipboard-on-shortcut-hint"
+                      className="text-sm text-muted-foreground"
+                    >
+                      {t("fillClipboardOnShortcutHint")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="order-8 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("closeBehavior")}</Label>
                   <Select
                     value={closeBehavior}
@@ -3261,7 +3310,7 @@ function App() {
                   </Select>
                 </div>
 
-                <div className="order-8 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-9 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="launch-at-startup">
                     {t("launchAtStartup")}
                   </Label>
@@ -3278,7 +3327,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-9 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-10 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="auto-check-updates">
                     {t("autoCheckUpdates")}
                   </Label>
@@ -3291,7 +3340,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-10 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-11 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("settingsTransfer")}</Label>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={exportSettings}>
@@ -3944,6 +3993,7 @@ function App() {
             </div>
             {hasConfiguredProvider ? (
               <Textarea
+                ref={sourceInputRef}
                 value={sourceText}
                 onChange={(event) => {
                   setSourceText(event.currentTarget.value);
