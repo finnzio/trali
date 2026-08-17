@@ -28,6 +28,14 @@ Trali is a **lightweight desktop AI translator and writing assistant**. You brin
 
 It is built for everyday work: messages, email, and technical docs. Open it with a shortcut, type, get a result, close the window. It stays in the tray until you need it again.
 
+<p align="center">
+  <img src="./docs/media/hero-light-en.webp" alt="Trali translating a short work message" width="720" />
+</p>
+
+<p align="center">
+  <img src="./docs/media/workflow-poster.webp" alt="Open Trali with a shortcut, then close to the tray" width="720" />
+</p>
+
 ---
 
 ## Why I built it
