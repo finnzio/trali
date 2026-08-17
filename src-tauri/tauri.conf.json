@@ -32,7 +32,7 @@
       "msi",
       "nsis"
     ],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -51,7 +51,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFFQzIyRkYyN0JCOTUyQjAKUldTd1VybDc4aS9DSGdhbWxLVXYvd1hrSmtWN3IyTnMxZ1hKS09tZTk5eURWdEhWRTRsVVM3MWEK",
       "endpoints": [
-        "https://github.com/StereoApp/trali/releases/latest/download/latest.json"
+        "https://github.com/finnzio/trali/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
