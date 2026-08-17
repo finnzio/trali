@@ -132,6 +132,8 @@ pub struct AppSettings {
     pub always_on_top: bool,
     #[serde(default)]
     pub fill_clipboard_on_shortcut: bool,
+    #[serde(default)]
+    pub copy_result_on_complete: bool,
     #[serde(default = "default_auto_check_updates")]
     pub auto_check_updates: bool,
     #[serde(default = "default_work_mode")]
@@ -162,6 +164,7 @@ impl Default for AppSettings {
             close_behavior: default_close_behavior(),
             always_on_top: false,
             fill_clipboard_on_shortcut: false,
+            copy_result_on_complete: false,
             auto_check_updates: default_auto_check_updates(),
             work_mode: default_work_mode(),
             selected_style_ids: default_selected_styles(),
@@ -324,5 +327,13 @@ mod tests {
 
         let decoded: AppSettings = toml::from_str("version = 2").unwrap();
         assert!(!decoded.fill_clipboard_on_shortcut);
+    }
+
+    #[test]
+    fn copy_result_on_complete_defaults_to_false() {
+        assert!(!AppSettings::default().copy_result_on_complete);
+
+        let decoded: AppSettings = toml::from_str("version = 2").unwrap();
+        assert!(!decoded.copy_result_on_complete);
     }
 }
