@@ -1071,7 +1071,19 @@ function App() {
                 return;
               }
               void (async () => {
+                let willShow = true;
+                try {
+                  const win = getCurrentWindow();
+                  const [visible, minimized] = await Promise.all([
+                    win.isVisible(),
+                    win.isMinimized(),
+                  ]);
+                  willShow = !visible || minimized;
+                } catch {
+                  willShow = true;
+                }
                 await invoke("toggle_window");
+                if (!willShow) return;
                 try {
                   const { readText } = await import(
                     "@tauri-apps/plugin-clipboard-manager"

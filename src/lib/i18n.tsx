@@ -1515,7 +1515,7 @@ const es: Messages = {
   settingsTransfer: "Datos de ajustes",
   autoCheckUpdates: "Buscar actualizaciones automáticamente",
   toggleShortcut: "Atajo de acceso",
-  fillClipboardOnShortcut: "Rellenar el portapapeles con el atajo",
+  fillClipboardOnShortcut: "Rellenar desde el portapapeles con el atajo",
   fillClipboardOnShortcutHint:
     "Si está activado, el atajo lee el texto plano del portapapeles, que puede incluir contraseñas.",
   closeBehavior: "Comportamiento al cerrar",
@@ -2312,7 +2312,7 @@ const ptBR: Messages = {
   settingsTransfer: "Dados de configuração",
   autoCheckUpdates: "Verificar atualizações automaticamente",
   toggleShortcut: "Atalho de exibição",
-  fillClipboardOnShortcut: "Preencher a área de transferência no atalho",
+  fillClipboardOnShortcut: "Preencher com a área de transferência no atalho",
   fillClipboardOnShortcutHint:
     "Quando ativado, o atalho lê o texto simples da área de transferência, que pode incluir senhas.",
   closeBehavior: "Comportamento ao fechar",
