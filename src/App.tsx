@@ -2429,7 +2429,6 @@ function App() {
       status: "completed",
       text: answer,
       speakableText: answer,
-      ...(version.proofread ? { proofread: version.proofread } : {}),
     };
 
     setGenerationResults((current) => ({
