@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, AppHandle, Manager, State};
 use tokio::sync::{Mutex, RwLock};
 use tokio_util::sync::CancellationToken;
@@ -237,6 +237,16 @@ pub async fn test_provider_connection(
     providers::test_connection(&state.client, &provider, api_key.as_deref()).await
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AskResultRequest {
+    pub request_id: String,
+    pub source_text: String,
+    pub result_text: String,
+    pub question: String,
+    pub interface_language: String,
+}
+
 #[tauri::command]
 pub async fn generate(
     state: State<'_, BackendState>,
@@ -244,6 +254,67 @@ pub async fn generate(
     on_event: Channel<GenerationEvent>,
 ) -> AppResult<()> {
     crate::generation::generate(&state, request, on_event).await
+}
+
+#[tauri::command]
+pub async fn ask_result_question(
+    state: State<'_, BackendState>,
+    request: AskResultRequest,
+) -> AppResult<String> {
+    if request.request_id.trim().is_empty() {
+        return Err(AppError::invalid("request id cannot be empty"));
+    }
+    let prompt = crate::prompts::prepare_result_question(
+        &request.source_text,
+        &request.result_text,
+        &request.question,
+        &request.interface_language,
+    )?;
+
+    let settings = state.settings.read().await;
+    let default_provider_id = settings
+        .default_provider_id
+        .clone()
+        .ok_or_else(|| AppError::invalid("no default provider is configured"))?;
+    let provider = settings
+        .providers
+        .iter()
+        .find(|item| item.id == default_provider_id)
+        .cloned()
+        .ok_or_else(|| AppError::invalid("configured provider is unavailable"))?;
+    drop(settings);
+
+    let token = CancellationToken::new();
+    {
+        let mut cancellations = state.cancellations.lock().await;
+        if let Some(previous) = cancellations.insert(request.request_id.clone(), token.clone()) {
+            previous.cancel();
+        }
+    }
+
+    let key_id = provider.id.clone();
+    let api_key = tokio::task::spawn_blocking(move || crate::secrets::get_api_key(&key_id).ok())
+        .await
+        .map_err(|error| AppError::new("secure_storage_failed", error.to_string()))?;
+
+    let result = providers::stream_completion(
+        &state.client,
+        &provider,
+        api_key.as_deref(),
+        &prompt,
+        token,
+        |_| {},
+    )
+    .await;
+
+    state.cancellations.lock().await.remove(&request.request_id);
+
+    let output = result?;
+    let output = output.trim();
+    if output.is_empty() {
+        return Err(AppError::provider("provider returned an empty response"));
+    }
+    Ok(output.to_owned())
 }
 
 #[tauri::command]

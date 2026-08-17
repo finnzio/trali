@@ -185,6 +185,7 @@ pub fn run() {
             commands::fetch_provider_models,
             commands::test_provider_connection,
             commands::generate,
+            commands::ask_result_question,
             commands::cancel_generation,
             commands::optimize_style_prompt,
             commands::speech_capabilities,
