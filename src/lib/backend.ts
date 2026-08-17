@@ -213,11 +213,23 @@ export function testBackendProviderConnection(providerId: string) {
   return invoke<void>("test_provider_connection", { providerId });
 }
 
+export type AskResultRequest = {
+  requestId: string;
+  sourceText: string;
+  resultText: string;
+  question: string;
+  interfaceLanguage: string;
+};
+
 export function generate(
   request: GenerationRequest,
   onEvent: Channel<GenerationEvent>,
 ) {
   return invoke<void>("generate", { request, onEvent });
+}
+
+export function askResultQuestion(request: AskResultRequest) {
+  return invoke<string>("ask_result_question", { request });
 }
 
 export function cancelGeneration(requestId: string) {

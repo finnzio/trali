@@ -129,6 +129,7 @@ import {
 } from "@/lib/language-pairs";
 import { normalizeProofreadOutput } from "@/lib/proofread";
 import {
+  askResultQuestion,
   cancelGeneration,
   createGenerationChannel,
   deleteProviderApiKey,
@@ -304,6 +305,80 @@ function isReusableGenerationResult(
     result != null &&
     result.status === "completed" &&
     result.text.trim().length > 0
+  );
+}
+
+function invokeErrorMessage(error: unknown) {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String(error.message);
+  }
+  return String(error);
+}
+
+type ResultQuestionAskProps = {
+  question: string;
+  onQuestionChange: (value: string) => void;
+  onSubmit: () => void;
+  asking: boolean;
+  answer: string | null;
+  error: string | null;
+  placeholder: string;
+  sendLabel: string;
+};
+
+function ResultQuestionAsk({
+  question,
+  onQuestionChange,
+  onSubmit,
+  asking,
+  answer,
+  error,
+  placeholder,
+  sendLabel,
+}: ResultQuestionAskProps) {
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
+    if (
+      event.key === "Enter" &&
+      !event.nativeEvent.isComposing &&
+      !event.repeat
+    ) {
+      event.preventDefault();
+      onSubmit();
+    }
+  }
+
+  return (
+    <div className="grid gap-2 px-4 pb-3">
+      <div className="flex items-center gap-1.5">
+        <Input
+          value={question}
+          onChange={(event) =>
+            onQuestionChange(event.currentTarget.value)
+          }
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={asking}
+          autoComplete="off"
+        />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onSubmit}
+          disabled={asking || question.trim().length === 0}
+          aria-label={sendLabel}
+        >
+          <ArrowRightIcon />
+        </Button>
+      </div>
+      {answer ? (
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+          {answer}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-sm text-destructive/80">{error}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -757,6 +832,11 @@ function App() {
     proofread: { results: {} },
   });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
+  const [askQuestion, setAskQuestion] = useState("");
+  const [askAnswer, setAskAnswer] = useState<string | null>(null);
+  const [askError, setAskError] = useState<string | null>(null);
+  const [askStatus, setAskStatus] = useState<"idle" | "asking">("idle");
+  const askRequestIdRef = useRef<string | null>(null);
   /** Fingerprint of inputs that invalidate cached per-style results. */
   const generationContextRef = useRef<string | null>(null);
   const activeGenerationIdsRef = useRef(new Set<string>());
@@ -839,6 +919,22 @@ function App() {
   );
   const swapVersion =
     workMode === "translate" ? translationVersions[0] : undefined;
+  const mainResultVersion = selectedStyleIds.includes("default")
+    ? translationVersions.find((version) => version.id === "default")
+    : translationVersions[0];
+  const hasCompletedMainResult =
+    mainResultVersion != null &&
+    mainResultVersion.status === "completed" &&
+    mainResultVersion.text.trim().length > 0;
+  const askContextKey = [
+    sourceText,
+    sourceLanguage,
+    detectedLanguage ?? "",
+    targetLanguage,
+    workMode,
+    selectedStyleIds.join("\0"),
+    hasCompletedMainResult ? mainResultVersion.text : "",
+  ].join("\u001f");
   const hasResolvedSourceLanguage =
     sourceLanguage !== "auto" || detectedLanguage !== null;
   const canSwapTranslation =
@@ -849,6 +945,18 @@ function App() {
       setDisabledSwapClickCount(0);
     }
   }, [canSwapTranslation]);
+
+  useEffect(() => {
+    setAskQuestion("");
+    setAskAnswer(null);
+    setAskError(null);
+    setAskStatus("idle");
+    const requestId = askRequestIdRef.current;
+    if (requestId) {
+      askRequestIdRef.current = null;
+      void cancelGeneration(requestId).catch(() => {});
+    }
+  }, [askContextKey]);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -2083,6 +2191,66 @@ function App() {
 
   function removeLanguagePair(id: string) {
     setLanguagePairs((current) => current.filter((pair) => pair.id !== id));
+  }
+
+  function submitResultQuestion() {
+    const question = askQuestion.trim();
+    if (
+      !question ||
+      askStatus === "asking" ||
+      !hasCompletedMainResult ||
+      !mainResultVersion ||
+      !isTauri()
+    ) {
+      return;
+    }
+
+    const requestId = window.crypto.randomUUID();
+    const previousRequestId = askRequestIdRef.current;
+    if (previousRequestId) {
+      void cancelGeneration(previousRequestId).catch(() => {});
+    }
+    askRequestIdRef.current = requestId;
+    setAskStatus("asking");
+    setAskAnswer(null);
+    setAskError(null);
+
+    void askResultQuestion({
+      requestId,
+      sourceText,
+      resultText: mainResultVersion.text,
+      question,
+      interfaceLanguage: locale,
+    })
+      .then((answer) => {
+        if (askRequestIdRef.current !== requestId) return;
+        const trimmed = answer.trim();
+        if (!trimmed) {
+          setAskAnswer(null);
+          setAskError("provider returned an empty response");
+          setAskStatus("idle");
+          return;
+        }
+        setAskAnswer(trimmed);
+        setAskError(null);
+        setAskStatus("idle");
+      })
+      .catch((error: unknown) => {
+        if (askRequestIdRef.current !== requestId) return;
+        const message = invokeErrorMessage(error);
+        if (message === "generation cancelled") {
+          setAskStatus("idle");
+          return;
+        }
+        setAskAnswer(null);
+        setAskError(message);
+        setAskStatus("idle");
+      })
+      .finally(() => {
+        if (askRequestIdRef.current === requestId) {
+          askRequestIdRef.current = null;
+        }
+      });
   }
 
   async function copyTranslation(versionId: string, text: string) {
@@ -4496,6 +4664,19 @@ function App() {
                         </Button>
                       </div>
                     </div>
+                    {hasCompletedMainResult &&
+                    version.id === mainResultVersion?.id ? (
+                      <ResultQuestionAsk
+                        question={askQuestion}
+                        onQuestionChange={setAskQuestion}
+                        onSubmit={submitResultQuestion}
+                        asking={askStatus === "asking"}
+                        answer={askAnswer}
+                        error={askError}
+                        placeholder={t("askResultPlaceholder")}
+                        sendLabel={t("askResultSend")}
+                      />
+                    ) : null}
                   </div>
                 ))}
               </div>
