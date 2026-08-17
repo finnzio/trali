@@ -728,6 +728,8 @@ function App() {
   const [fillClipboardOnShortcut, setFillClipboardOnShortcut] = useState(false);
   const fillClipboardOnShortcutRef = useRef(false);
   fillClipboardOnShortcutRef.current = fillClipboardOnShortcut;
+  const providersRef = useRef(providers);
+  providersRef.current = providers;
   const sourceInputRef = useRef<HTMLTextAreaElement>(null);
   const [autoCheckUpdates, setAutoCheckUpdates] = useState(true);
   const windowExpandedRef = useRef(false);
@@ -886,6 +888,17 @@ function App() {
     // The first snapshot deliberately uses the initial legacy state for migration.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!backendReady) return;
+    if (providers.length === 0) {
+      setSettingsTab("provider");
+      setStylePromptOptimizerId(null);
+      setSettingsOpen(true);
+    }
+    // Only on first backend snapshot: later closes must stay closed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backendReady]);
 
   useEffect(() => {
     if (!settingsOpen || settingsTab !== "provider") return;
@@ -1066,10 +1079,6 @@ function App() {
           if (!toggleShortcut.trim()) return;
           return register(toggleShortcut, (event) => {
             if (event.state === "Pressed") {
-              if (!fillClipboardOnShortcutRef.current) {
-                void invoke("toggle_window");
-                return;
-              }
               void (async () => {
                 let willShow = true;
                 try {
@@ -1084,6 +1093,13 @@ function App() {
                 }
                 await invoke("toggle_window");
                 if (!willShow) return;
+                if (providersRef.current.length === 0) {
+                  setSettingsTab("provider");
+                  setStylePromptOptimizerId(null);
+                  setSettingsOpen(true);
+                  return;
+                }
+                if (!fillClipboardOnShortcutRef.current) return;
                 try {
                   const { readText } = await import(
                     "@tauri-apps/plugin-clipboard-manager"
