@@ -116,9 +116,17 @@ jobs:
 
       - name: Locate Windows NSIS installer
         id: nsis
-        if: matrix.name == 'windows-x64' && startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' && secrets.SIGNPATH_ORGANIZATION_ID != ''
+        if: matrix.name == 'windows-x64' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
         shell: pwsh
         run: |
+          if ([string]::IsNullOrEmpty($env:SIGNPATH_API_TOKEN) -or [string]::IsNullOrEmpty($env:SIGNPATH_ORGANIZATION_ID)) {
+            "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "SignPath secrets are unset; skipping NSIS locate"
+            exit 0
+          }
           $nsisDir = Join-Path $env:GITHUB_WORKSPACE "src-tauri/target/release/bundle/nsis"
           $setup = @(
             Get-ChildItem -Path $nsisDir -Filter "*setup.exe" -ErrorAction SilentlyContinue -File
@@ -127,12 +135,13 @@ jobs:
             throw "Expected exactly one NSIS *setup.exe under $nsisDir, found $($setup.Count)"
           }
           $rel = "src-tauri/target/release/bundle/nsis/$($setup[0].Name)"
+          "skip=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "path=$rel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           Write-Host "Found $rel"
 
       - name: Upload unsigned Windows NSIS
         id: upload
-        if: steps.nsis.outcome == 'success'
+        if: steps.nsis.outcome == 'success' && steps.nsis.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-windows-nsis
@@ -141,30 +150,49 @@ jobs:
 
   sign-windows-nsis:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' && secrets.SIGNPATH_ORGANIZATION_ID != ''
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     permissions:
       contents: write
       actions: read
     steps:
+      - name: Check SignPath secrets
+        id: gate
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrEmpty($env:SIGNPATH_API_TOKEN) -or [string]::IsNullOrEmpty($env:SIGNPATH_ORGANIZATION_ID)) {
+            "should_sign=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "SignPath secrets are unset; skipping signing"
+            exit 0
+          }
+          "should_sign=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Checkout
+        if: steps.gate.outputs.should_sign == 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: steps.gate.outputs.should_sign == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: Setup Node.js
+        if: steps.gate.outputs.should_sign == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: pnpm
 
       - name: Install frontend dependencies
+        if: steps.gate.outputs.should_sign == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Download unsigned Windows NSIS
+        if: steps.gate.outputs.should_sign == 'true'
         uses: actions/download-artifact@v4
         with:
           name: unsigned-windows-nsis
@@ -172,6 +200,7 @@ jobs:
 
       - name: Re-upload unsigned Windows NSIS for SignPath
         id: upload
+        if: steps.gate.outputs.should_sign == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-windows-nsis-sign
@@ -180,6 +209,7 @@ jobs:
 
       - name: Submit SignPath signing request
         id: signpath
+        if: steps.gate.outputs.should_sign == 'true'
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -193,6 +223,7 @@ jobs:
           output-artifact-directory: ${{ github.workspace }}/signed-nsis
 
       - name: Publish signed NSIS and refresh updater signature
+        if: steps.gate.outputs.should_sign == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
