@@ -53,40 +53,6 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     restore_window(&window)
 }
 
-fn quit_application<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(state) = app.try_state::<commands::BackendState>() {
-        let _ = state.speech.stop();
-    }
-    app.exit(0);
-}
-
-/// Headless CI hook: when `TRALI_CI_ACCEPTANCE` is set, watch for
-/// `%TEMP%/trali-ci-exit` and take the same path as tray "Quit".
-/// Production launches never set the env var, so this is inert.
-#[cfg(desktop)]
-fn start_ci_acceptance_hooks<R: Runtime>(app: &AppHandle<R>) {
-    if !std::env::var_os("TRALI_CI_ACCEPTANCE").is_some_and(|value| !value.is_empty()) {
-        return;
-    }
-
-    let handle = app.clone();
-    std::thread::Builder::new()
-        .name("trali-ci-exit".into())
-        .spawn(move || {
-            let signal = std::env::temp_dir().join("trali-ci-exit");
-            let _ = std::fs::remove_file(&signal);
-            loop {
-                if signal.is_file() {
-                    let _ = std::fs::remove_file(&signal);
-                    quit_application(&handle);
-                    break;
-                }
-                std::thread::sleep(std::time::Duration::from_millis(150));
-            }
-        })
-        .expect("failed to start CI exit hook");
-}
-
 fn toggle_main_window(app: &AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("main")
@@ -148,9 +114,6 @@ pub fn run() {
             }
             app.manage(backend);
 
-            #[cfg(desktop)]
-            start_ci_acceptance_hooks(app.handle());
-
             let show_item = MenuItem::with_id(app, "show", "显示 / Show", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "退出 / Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
@@ -169,7 +132,10 @@ pub fn run() {
                         let _ = show_main_window(app);
                     }
                     "quit" => {
-                        quit_application(app);
+                        if let Some(state) = app.try_state::<commands::BackendState>() {
+                            let _ = state.speech.stop();
+                        }
+                        app.exit(0);
                     }
                     _ => {}
                 })

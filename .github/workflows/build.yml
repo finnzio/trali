@@ -163,7 +163,16 @@ jobs:
 
       - name: Silent-install NSIS build and assert cases 1-6
         shell: pwsh
-        run: ./scripts/windows-single-instance-acceptance.ps1 -InstallerDir installer
+        run: |
+          $setup = Get-ChildItem -Path installer -Recurse -Filter '*setup.exe' | Select-Object -First 1
+          if (-not $setup) {
+            $setup = Get-ChildItem -Path installer -Recurse -Filter '*.exe' | Where-Object { $_.Name -notmatch 'uninstall' } | Select-Object -First 1
+          }
+          if (-not $setup) { throw 'nsis installer not found in artifact' }
+          Write-Host "Installing $($setup.FullName)"
+          $proc = Start-Process -FilePath $setup.FullName -ArgumentList '/S' -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "installer exit $($proc.ExitCode)" }
+          pwsh -File scripts/assert-single-instance.ps1
 
       - name: Cleanup leftover Trali install
         if: always()
