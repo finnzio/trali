@@ -347,6 +347,8 @@ type ResultQuestionAskProps = {
   askingLabel: string;
   questionLabel: string;
   answerLabel: string;
+  onUseAsTranslation?: () => void;
+  useAsTranslationLabel?: string;
 };
 
 function ResultQuestionAsk({
@@ -362,6 +364,8 @@ function ResultQuestionAsk({
   askingLabel,
   questionLabel,
   answerLabel,
+  onUseAsTranslation,
+  useAsTranslationLabel,
 }: ResultQuestionAskProps) {
   function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (
@@ -378,6 +382,12 @@ function ResultQuestionAsk({
     submittedQuestion.length > 0 &&
     !asking &&
     (answer != null || error != null);
+  const showUseAsTranslation =
+    onUseAsTranslation != null &&
+    !asking &&
+    error == null &&
+    answer != null &&
+    answer.trim().length > 0;
 
   return (
     <div className="border-t border-border/70 px-4 pb-3 pt-2">
@@ -399,10 +409,20 @@ function ResultQuestionAsk({
               {error ? (
                 <p className="min-w-0 text-sm text-destructive/80">{error}</p>
               ) : (
-                <p className="min-w-0 text-sm whitespace-pre-wrap text-foreground">
+                <p className="min-w-0 flex-1 text-sm whitespace-pre-wrap text-foreground">
                   {answer}
                 </p>
               )}
+              {showUseAsTranslation ? (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  className="shrink-0 self-start"
+                  onClick={onUseAsTranslation}
+                >
+                  {useAsTranslationLabel}
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -2385,6 +2405,99 @@ function App() {
           delete askRequestIdByVersionRef.current[versionId];
         }
       });
+  }
+
+  function applyAskAnswerAsTranslation(versionId: string) {
+    const slot = askByVersionRef.current[versionId] ?? emptyAskSlot();
+    const answer = slot.answer?.trim() ?? "";
+    if (!answer || slot.error || slot.status === "asking") {
+      return;
+    }
+
+    const version = translationVersions.find(
+      (candidate) => candidate.id === versionId,
+    );
+    if (
+      version == null ||
+      version.status !== "completed" ||
+      version.text.trim().length === 0
+    ) {
+      return;
+    }
+
+    const nextResult: GenerationResult = {
+      status: "completed",
+      text: answer,
+      speakableText: answer,
+      ...(version.proofread ? { proofread: version.proofread } : {}),
+    };
+
+    setGenerationResults((current) => ({
+      ...current,
+      [versionId]: nextResult,
+    }));
+
+    const currentCache = generationCacheRef.current[workMode];
+    const existingContextKey = currentCache.results[versionId]?.contextKey;
+    const contextKey =
+      existingContextKey ??
+      (() => {
+        const text = sourceText.trim();
+        const resolvedSourceLanguage =
+          sourceLanguage === "auto"
+            ? (detectedLanguage ?? "auto")
+            : sourceLanguage;
+        const includeGlossary = workMode === "proofread" || mountGlossary;
+        const baseContextKey = JSON.stringify({
+          text,
+          workMode,
+          sourceLanguage: resolvedSourceLanguage,
+          targetLanguage,
+          includeGlossary,
+          locale,
+          defaultProviderId,
+          providers: providers.map((provider) => ({
+            id: provider.id,
+            type: provider.type,
+            endpoint: provider.endpoint,
+            model: provider.model,
+          })),
+          styles: styles.map((style) => ({
+            id: style.id,
+            name: style.name,
+            prompt: style.prompt,
+            providerId: style.providerId,
+          })),
+        });
+        return JSON.stringify({
+          baseContextKey,
+          id: versionId,
+          transcreation:
+            versionId !== "default" &&
+            transcreationByStyleId[versionId] === true,
+        });
+      })();
+    generationCacheRef.current[workMode] = {
+      results: {
+        ...currentCache.results,
+        [versionId]: {
+          contextKey,
+          result: nextResult,
+        },
+      },
+    };
+
+    const requestId = askRequestIdByVersionRef.current[versionId];
+    if (requestId) {
+      delete askRequestIdByVersionRef.current[versionId];
+      void cancelGeneration(requestId).catch(() => {});
+    }
+    setAskByVersion((current) => {
+      if (!(versionId in current)) return current;
+      const next = { ...current };
+      delete next[versionId];
+      return next;
+    });
   }
 
   async function copyTranslation(versionId: string, text: string) {
@@ -4817,6 +4930,10 @@ function App() {
                         askingLabel={t("askResultAsking")}
                         questionLabel={t("askResultQuestionLabel")}
                         answerLabel={t("askResultAnswerLabel")}
+                        onUseAsTranslation={() =>
+                          applyAskAnswerAsTranslation(version.id)
+                        }
+                        useAsTranslationLabel={t("askResultUseAsTranslation")}
                       />
                     ) : null}
                   </div>
