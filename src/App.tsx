@@ -316,6 +316,24 @@ function invokeErrorMessage(error: unknown) {
   return String(error);
 }
 
+type AskSlot = {
+  question: string;
+  submittedQuestion: string;
+  answer: string | null;
+  error: string | null;
+  status: "idle" | "asking";
+};
+
+function emptyAskSlot(): AskSlot {
+  return {
+    question: "",
+    submittedQuestion: "",
+    answer: null,
+    error: null,
+    status: "idle",
+  };
+}
+
 type ResultQuestionAskProps = {
   question: string;
   onQuestionChange: (value: string) => void;
@@ -870,12 +888,11 @@ function App() {
     proofread: { results: {} },
   });
   const [generationRefreshNonce, setGenerationRefreshNonce] = useState(0);
-  const [askQuestion, setAskQuestion] = useState("");
-  const [askSubmittedQuestion, setAskSubmittedQuestion] = useState("");
-  const [askAnswer, setAskAnswer] = useState<string | null>(null);
-  const [askError, setAskError] = useState<string | null>(null);
-  const [askStatus, setAskStatus] = useState<"idle" | "asking">("idle");
-  const askRequestIdRef = useRef<string | null>(null);
+  const [askByVersion, setAskByVersion] = useState<Record<string, AskSlot>>({});
+  const askByVersionRef = useRef(askByVersion);
+  askByVersionRef.current = askByVersion;
+  const askRequestIdByVersionRef = useRef<Record<string, string>>({});
+  const lastCompletedTextByVersionRef = useRef<Record<string, string>>({});
   /** Fingerprint of inputs that invalidate cached per-style results. */
   const generationContextRef = useRef<string | null>(null);
   const activeGenerationIdsRef = useRef(new Set<string>());
@@ -958,13 +975,6 @@ function App() {
   );
   const swapVersion =
     workMode === "translate" ? translationVersions[0] : undefined;
-  const mainResultVersion = selectedStyleIds.includes("default")
-    ? translationVersions.find((version) => version.id === "default")
-    : translationVersions[0];
-  const hasCompletedMainResult =
-    mainResultVersion != null &&
-    mainResultVersion.status === "completed" &&
-    mainResultVersion.text.trim().length > 0;
   const askContextKey = [
     sourceText,
     sourceLanguage,
@@ -972,8 +982,17 @@ function App() {
     targetLanguage,
     workMode,
     selectedStyleIds.join("\0"),
-    hasCompletedMainResult ? mainResultVersion.text : "",
   ].join("\u001f");
+  const askVersionSnapshotKey = translationVersions
+    .map((version) =>
+      [
+        version.id,
+        version.status === "completed" && version.text.trim().length > 0
+          ? version.text
+          : "",
+      ].join("\0"),
+    )
+    .join("\u001f");
   const hasResolvedSourceLanguage =
     sourceLanguage !== "auto" || detectedLanguage !== null;
   const canSwapTranslation =
@@ -986,17 +1005,67 @@ function App() {
   }, [canSwapTranslation]);
 
   useEffect(() => {
-    setAskQuestion("");
-    setAskSubmittedQuestion("");
-    setAskAnswer(null);
-    setAskError(null);
-    setAskStatus("idle");
-    const requestId = askRequestIdRef.current;
-    if (requestId) {
-      askRequestIdRef.current = null;
+    const requestIds = Object.values(askRequestIdByVersionRef.current);
+    askRequestIdByVersionRef.current = {};
+    lastCompletedTextByVersionRef.current = {};
+    for (const requestId of requestIds) {
       void cancelGeneration(requestId).catch(() => {});
     }
+    setAskByVersion({});
   }, [askContextKey]);
+
+  const translationVersionsRef = useRef(translationVersions);
+  translationVersionsRef.current = translationVersions;
+
+  useEffect(() => {
+    const versions = translationVersionsRef.current;
+    const lastTexts = lastCompletedTextByVersionRef.current;
+    const currentIds = new Set(versions.map((version) => version.id));
+    const idsToClear = new Set<string>();
+
+    for (const id of new Set([
+      ...Object.keys(lastTexts),
+      ...Object.keys(askRequestIdByVersionRef.current),
+      ...Object.keys(askByVersionRef.current),
+    ])) {
+      if (!currentIds.has(id)) {
+        idsToClear.add(id);
+        delete lastTexts[id];
+      }
+    }
+
+    for (const version of versions) {
+      if (version.status === "completed" && version.text.trim().length > 0) {
+        const previous = lastTexts[version.id];
+        if (previous !== undefined && previous !== version.text) {
+          idsToClear.add(version.id);
+        }
+        lastTexts[version.id] = version.text;
+      }
+    }
+
+    if (idsToClear.size === 0) return;
+
+    for (const id of idsToClear) {
+      const requestId = askRequestIdByVersionRef.current[id];
+      if (requestId) {
+        delete askRequestIdByVersionRef.current[id];
+        void cancelGeneration(requestId).catch(() => {});
+      }
+    }
+
+    setAskByVersion((current) => {
+      let changed = false;
+      const next = { ...current };
+      for (const id of idsToClear) {
+        if (id in next) {
+          delete next[id];
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [askVersionSnapshotKey]);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -2233,64 +2302,87 @@ function App() {
     setLanguagePairs((current) => current.filter((pair) => pair.id !== id));
   }
 
-  function submitResultQuestion() {
-    const question = askQuestion.trim();
+  function patchAskSlot(versionId: string, patch: Partial<AskSlot>) {
+    setAskByVersion((current) => ({
+      ...current,
+      [versionId]: {
+        ...(current[versionId] ?? emptyAskSlot()),
+        ...patch,
+      },
+    }));
+  }
+
+  function submitResultQuestion(versionId: string) {
+    const slot = askByVersionRef.current[versionId] ?? emptyAskSlot();
+    const question = slot.question.trim();
+    const version = translationVersions.find(
+      (candidate) => candidate.id === versionId,
+    );
     if (
       !question ||
-      askStatus === "asking" ||
-      !hasCompletedMainResult ||
-      !mainResultVersion ||
+      slot.status === "asking" ||
+      version == null ||
+      version.status !== "completed" ||
+      version.text.trim().length === 0 ||
       !isTauri()
     ) {
       return;
     }
 
     const requestId = window.crypto.randomUUID();
-    const previousRequestId = askRequestIdRef.current;
+    const previousRequestId = askRequestIdByVersionRef.current[versionId];
     if (previousRequestId) {
       void cancelGeneration(previousRequestId).catch(() => {});
     }
-    askRequestIdRef.current = requestId;
-    setAskSubmittedQuestion(question);
-    setAskQuestion("");
-    setAskStatus("asking");
-    setAskAnswer(null);
-    setAskError(null);
+    askRequestIdByVersionRef.current[versionId] = requestId;
+    patchAskSlot(versionId, {
+      question: "",
+      submittedQuestion: question,
+      answer: null,
+      error: null,
+      status: "asking",
+    });
 
     void askResultQuestion({
       requestId,
       sourceText,
-      resultText: mainResultVersion.text,
+      resultText: version.text,
       question,
       interfaceLanguage: locale,
     })
       .then((answer) => {
-        if (askRequestIdRef.current !== requestId) return;
+        if (askRequestIdByVersionRef.current[versionId] !== requestId) return;
         const trimmed = answer.trim();
         if (!trimmed) {
-          setAskAnswer(null);
-          setAskError("provider returned an empty response");
-          setAskStatus("idle");
+          patchAskSlot(versionId, {
+            answer: null,
+            error: "provider returned an empty response",
+            status: "idle",
+          });
           return;
         }
-        setAskAnswer(trimmed);
-        setAskError(null);
-        setAskStatus("idle");
+        patchAskSlot(versionId, {
+          answer: trimmed,
+          error: null,
+          status: "idle",
+        });
       })
       .catch((error: unknown) => {
-        if (askRequestIdRef.current !== requestId) return;
+        if (askRequestIdByVersionRef.current[versionId] !== requestId) return;
         const message = invokeErrorMessage(error);
         if (message === "generation cancelled") {
-          setAskStatus("idle");
+          patchAskSlot(versionId, { status: "idle" });
           return;
         }
-        setAskAnswer(null);
-        setAskError(message);
-        setAskStatus("idle");
+        patchAskSlot(versionId, {
+          answer: null,
+          error: message,
+          status: "idle",
+        });
       })
       .finally(() => {
-        if (askRequestIdRef.current === requestId) {
-          askRequestIdRef.current = null;
+        if (askRequestIdByVersionRef.current[versionId] === requestId) {
+          delete askRequestIdByVersionRef.current[versionId];
         }
       });
   }
@@ -4706,16 +4798,20 @@ function App() {
                         </Button>
                       </div>
                     </div>
-                    {hasCompletedMainResult &&
-                    version.id === mainResultVersion?.id ? (
+                    {version.status === "completed" &&
+                    version.text.trim().length > 0 ? (
                       <ResultQuestionAsk
-                        question={askQuestion}
-                        onQuestionChange={setAskQuestion}
-                        onSubmit={submitResultQuestion}
-                        asking={askStatus === "asking"}
-                        submittedQuestion={askSubmittedQuestion}
-                        answer={askAnswer}
-                        error={askError}
+                        question={askByVersion[version.id]?.question ?? ""}
+                        onQuestionChange={(value) =>
+                          patchAskSlot(version.id, { question: value })
+                        }
+                        onSubmit={() => submitResultQuestion(version.id)}
+                        asking={askByVersion[version.id]?.status === "asking"}
+                        submittedQuestion={
+                          askByVersion[version.id]?.submittedQuestion ?? ""
+                        }
+                        answer={askByVersion[version.id]?.answer ?? null}
+                        error={askByVersion[version.id]?.error ?? null}
                         placeholder={t("askResultPlaceholder")}
                         sendLabel={t("askResultSend")}
                         askingLabel={t("askResultAsking")}
