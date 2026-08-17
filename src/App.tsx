@@ -728,6 +728,10 @@ function App() {
   const [fillClipboardOnShortcut, setFillClipboardOnShortcut] = useState(false);
   const fillClipboardOnShortcutRef = useRef(false);
   fillClipboardOnShortcutRef.current = fillClipboardOnShortcut;
+  const [copyResultOnComplete, setCopyResultOnComplete] = useState(false);
+  const copyResultOnCompleteRef = useRef(false);
+  copyResultOnCompleteRef.current = copyResultOnComplete;
+  const copiedResultRequestIdsRef = useRef(new Set<string>());
   const providersRef = useRef(providers);
   providersRef.current = providers;
   const sourceInputRef = useRef<HTMLTextAreaElement>(null);
@@ -939,6 +943,7 @@ function App() {
     alwaysOnTop,
     backendReady,
     closeBehavior,
+    copyResultOnComplete,
     fillClipboardOnShortcut,
     defaultProviderId,
     defaultTarget,
@@ -1198,6 +1203,7 @@ function App() {
         void cancelGeneration(requestId).catch(() => {});
       }
       activeGenerationIdsRef.current.clear();
+      copiedResultRequestIdsRef.current.clear();
     };
 
     if (
@@ -1291,6 +1297,7 @@ function App() {
       });
 
       const requestId = window.crypto.randomUUID();
+      copiedResultRequestIdsRef.current.clear();
       activeGenerationIdsRef.current.add(requestId);
       generationContextRef.current = contextKey;
 
@@ -1358,6 +1365,24 @@ function App() {
                 status: "completed",
                 speakableText: event.speakableText ?? undefined,
               };
+            }
+            if (copyResultOnCompleteRef.current) {
+              const alreadyWritten = copiedResultRequestIdsRef.current.has(
+                event.requestId,
+              );
+              const defaultInRun = selectedStyleIds.includes("default");
+              const isMainVariant = defaultInRun
+                ? event.variantId === "default"
+                : idsToGenerate.includes(event.variantId);
+              const plainText = result.text.trim();
+              if (!alreadyWritten && isMainVariant && plainText) {
+                copiedResultRequestIdsRef.current.add(event.requestId);
+                void import("@tauri-apps/plugin-clipboard-manager")
+                  .then(({ writeText }) => writeText(plainText))
+                  .catch(() => {
+                    // Denied or unavailable — leave clipboard unchanged.
+                  });
+              }
             }
             const currentCache = generationCacheRef.current[workMode];
             generationCacheRef.current[workMode] = {
@@ -1463,6 +1488,7 @@ function App() {
       closeBehavior,
       alwaysOnTop,
       fillClipboardOnShortcut,
+      copyResultOnComplete,
       autoCheckUpdates,
       workMode,
       selectedStyleIds,
@@ -1518,6 +1544,7 @@ function App() {
     setCloseBehavior(settings.closeBehavior === "quit" ? "quit" : "tray");
     setAlwaysOnTop(Boolean(settings.alwaysOnTop));
     setFillClipboardOnShortcut(Boolean(settings.fillClipboardOnShortcut));
+    setCopyResultOnComplete(Boolean(settings.copyResultOnComplete));
     setAutoCheckUpdates(settings.autoCheckUpdates !== false);
     setWorkMode(
       settings.workMode === "proofread" ? "proofread" : "translate",
@@ -3324,7 +3351,27 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-8 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-8 grid grid-cols-[9rem_minmax(0,1fr)] items-start gap-3">
+                  <Label htmlFor="copy-result-on-complete" className="pt-1">
+                    {t("copyResultOnComplete")}
+                  </Label>
+                  <div className="grid gap-1.5">
+                    <Switch
+                      id="copy-result-on-complete"
+                      checked={copyResultOnComplete}
+                      onCheckedChange={setCopyResultOnComplete}
+                      aria-describedby="copy-result-on-complete-hint"
+                    />
+                    <p
+                      id="copy-result-on-complete-hint"
+                      className="text-sm text-muted-foreground"
+                    >
+                      {t("copyResultOnCompleteHint")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="order-9 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("closeBehavior")}</Label>
                   <Select
                     value={closeBehavior}
@@ -3349,7 +3396,7 @@ function App() {
                   </Select>
                 </div>
 
-                <div className="order-9 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-10 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="launch-at-startup">
                     {t("launchAtStartup")}
                   </Label>
@@ -3366,7 +3413,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-10 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-11 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label htmlFor="auto-check-updates">
                     {t("autoCheckUpdates")}
                   </Label>
@@ -3379,7 +3426,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="order-11 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
+                <div className="order-12 grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
                   <Label>{t("settingsTransfer")}</Label>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={exportSettings}>

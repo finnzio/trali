@@ -242,6 +242,9 @@ const zhCN = {
   fillClipboardOnShortcut: "快捷键填入剪贴板",
   fillClipboardOnShortcutHint:
     "开启后，快捷键唤起会读取剪贴板纯文本，可能含密码",
+  copyResultOnComplete: "译完复制结果",
+  copyResultOnCompleteHint:
+    "开启后，翻译或校对成功会把主结果写入剪贴板，可能覆盖当前内容",
   closeBehavior: "关闭行为",
   launchAtStartup: "开机自启动",
   closeCompletely: "完全关闭",
@@ -501,6 +504,9 @@ const en: Messages = {
   fillClipboardOnShortcut: "Fill clipboard on shortcut",
   fillClipboardOnShortcutHint:
     "When on, the shortcut reads clipboard plain text, which may include passwords.",
+  copyResultOnComplete: "Copy result when done",
+  copyResultOnCompleteHint:
+    "When on, a successful translation or proofread writes the main result to the clipboard and may replace what is there",
   closeBehavior: "Close behavior",
   launchAtStartup: "Launch at startup",
   closeCompletely: "Quit completely",
@@ -748,6 +754,9 @@ const zhTW: Messages = {
   fillClipboardOnShortcut: "快捷鍵填入剪貼簿",
   fillClipboardOnShortcutHint:
     "開啟後，快捷鍵喚起會讀取剪貼簿純文字，可能含密碼",
+  copyResultOnComplete: "譯完複製結果",
+  copyResultOnCompleteHint:
+    "開啟後，翻譯或校對成功會把主結果寫入剪貼簿，可能覆蓋目前內容",
   closeBehavior: "關閉行為",
   launchAtStartup: "開機時自動啟動",
   closeCompletely: "完全關閉",
@@ -1002,6 +1011,9 @@ const ja: Messages = {
   fillClipboardOnShortcut: "ショートカットでクリップボードを入力",
   fillClipboardOnShortcutHint:
     "オンにすると、ショートカットで呼び出したときにクリップボードのプレーンテキストを読み取ります。パスワードが含まれる場合があります。",
+  copyResultOnComplete: "完了時に結果をコピー",
+  copyResultOnCompleteHint:
+    "オンにすると、翻訳または校正が成功したときに主な結果をクリップボードに書き込み、現在の内容を上書きする場合があります",
   closeBehavior: "閉じる動作",
   launchAtStartup: "起動時に自動開始",
   closeCompletely: "完全に終了",
@@ -1257,6 +1269,9 @@ const ko: Messages = {
   fillClipboardOnShortcut: "단축키로 클립보드 채우기",
   fillClipboardOnShortcutHint:
     "켜면 단축키로 불러올 때 클립보드의 일반 텍스트를 읽습니다. 비밀번호가 포함될 수 있습니다.",
+  copyResultOnComplete: "완료 시 결과 복사",
+  copyResultOnCompleteHint:
+    "켜면 번역 또는 교정에 성공했을 때 주요 결과를 클립보드에 쓰며, 현재 내용을 덮어쓸 수 있습니다",
   closeBehavior: "닫기 동작",
   launchAtStartup: "시작할 때 자동 실행",
   closeCompletely: "완전히 종료",
@@ -1518,6 +1533,9 @@ const es: Messages = {
   fillClipboardOnShortcut: "Rellenar desde el portapapeles con el atajo",
   fillClipboardOnShortcutHint:
     "Si está activado, el atajo lee el texto plano del portapapeles, que puede incluir contraseñas.",
+  copyResultOnComplete: "Copiar resultado al terminar",
+  copyResultOnCompleteHint:
+    "Si está activado, una traducción o corrección correcta escribe el resultado principal en el portapapeles y puede reemplazar lo que haya",
   closeBehavior: "Comportamiento al cerrar",
   launchAtStartup: "Abrir al iniciar",
   closeCompletely: "Salir por completo",
@@ -1784,6 +1802,9 @@ const de: Messages = {
   fillClipboardOnShortcut: "Zwischenablage per Tastenkürzel einfügen",
   fillClipboardOnShortcutHint:
     "Wenn aktiv, liest das Tastenkürzel Klartext aus der Zwischenablage, der Passwörter enthalten kann.",
+  copyResultOnComplete: "Ergebnis nach Abschluss kopieren",
+  copyResultOnCompleteHint:
+    "Wenn aktiv, schreibt eine erfolgreiche Übersetzung oder Korrektur das Hauptergebnis in die Zwischenablage und kann den vorhandenen Inhalt ersetzen",
   closeBehavior: "Verhalten beim Schließen",
   launchAtStartup: "Beim Systemstart öffnen",
   closeCompletely: "Vollständig beenden",
@@ -2050,6 +2071,9 @@ const fr: Messages = {
   fillClipboardOnShortcut: "Remplir depuis le presse-papiers avec le raccourci",
   fillClipboardOnShortcutHint:
     "Une fois activé, le raccourci lit le texte brut du presse-papiers, qui peut contenir des mots de passe.",
+  copyResultOnComplete: "Copier le résultat une fois terminé",
+  copyResultOnCompleteHint:
+    "Une fois activé, une traduction ou une relecture réussie écrit le résultat principal dans le presse-papiers et peut remplacer le contenu actuel",
   closeBehavior: "Comportement de fermeture",
   launchAtStartup: "Ouvrir au démarrage",
   closeCompletely: "Quitter complètement",
@@ -2315,6 +2339,9 @@ const ptBR: Messages = {
   fillClipboardOnShortcut: "Preencher com a área de transferência no atalho",
   fillClipboardOnShortcutHint:
     "Quando ativado, o atalho lê o texto simples da área de transferência, que pode incluir senhas.",
+  copyResultOnComplete: "Copiar resultado ao concluir",
+  copyResultOnCompleteHint:
+    "Quando ativado, uma tradução ou revisão bem-sucedida grava o resultado principal na área de transferência e pode substituir o conteúdo atual",
   closeBehavior: "Comportamento ao fechar",
   launchAtStartup: "Iniciar com o sistema",
   closeCompletely: "Sair completamente",
@@ -2579,6 +2606,9 @@ const ru: Messages = {
   fillClipboardOnShortcut: "Вставлять буфер обмена по горячей клавише",
   fillClipboardOnShortcutHint:
     "Если включено, горячая клавиша читает обычный текст из буфера обмена, в котором могут быть пароли.",
+  copyResultOnComplete: "Копировать результат по завершении",
+  copyResultOnCompleteHint:
+    "Если включено, успешный перевод или вычитка записывает основной результат в буфер обмена и может заменить текущее содержимое",
   closeBehavior: "Поведение при закрытии",
   launchAtStartup: "Запускать при входе",
   closeCompletely: "Полностью выйти",
