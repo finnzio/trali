@@ -106,6 +106,7 @@ jobs:
             | Linux | x64 (amd64) | `.AppImage`, `.deb` |
           releaseDraft: true
           prerelease: false
+          uploadUpdaterJson: true
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: trali-[platform]-[arch]-[bundle]
           releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
