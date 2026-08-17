@@ -16,6 +16,7 @@ jobs:
   build:
     permissions:
       contents: write
+      actions: read
 
     strategy:
       fail-fast: false
@@ -112,3 +113,52 @@ jobs:
           releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
+
+      - name: Locate Windows NSIS installer
+        id: nsis
+        if: matrix.name == 'windows-x64' && startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' && secrets.SIGNPATH_ORGANIZATION_ID != ''
+        shell: pwsh
+        run: |
+          $nsisDir = Join-Path $env:GITHUB_WORKSPACE "src-tauri/target/release/bundle/nsis"
+          $setup = @(
+            Get-ChildItem -Path $nsisDir -Filter "*setup.exe" -ErrorAction SilentlyContinue -File
+          )
+          if ($setup.Count -ne 1) {
+            throw "Expected exactly one NSIS *setup.exe under $nsisDir, found $($setup.Count)"
+          }
+          $rel = "src-tauri/target/release/bundle/nsis/$($setup[0].Name)"
+          "path=$rel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "Found $rel"
+
+      - name: Upload unsigned Windows NSIS
+        id: upload
+        if: steps.nsis.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows-nsis
+          path: ${{ steps.nsis.outputs.path }}
+          if-no-files-found: error
+
+      - name: Submit SignPath signing request
+        id: signpath
+        if: steps.upload.outcome == 'success'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: trali
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: windows-nsis
+          github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: ${{ github.workspace }}/signed-nsis
+
+      - name: Publish signed NSIS and refresh updater signature
+        id: publish
+        if: steps.signpath.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        shell: pwsh
+        run: ./scripts/publish-signed-nsis.ps1
