@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime, WebviewWindow,
+    AppHandle, Emitter, Manager, Runtime, WebviewWindow,
 };
 
 mod commands;
@@ -50,7 +50,9 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
         .get_webview_window("main")
         .ok_or_else(|| "main window is unavailable".to_string())?;
 
-    restore_window(&window)
+    restore_window(&window)?;
+    let _ = app.emit("main-window-shown", ());
+    Ok(())
 }
 
 fn toggle_main_window(app: &AppHandle) -> Result<(), String> {
