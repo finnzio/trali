@@ -970,8 +970,19 @@ function App() {
     }).then((dispose) => {
       unlisten = dispose;
     });
+    let unlistenShown: (() => void) | undefined;
+    void listen("main-window-shown", () => {
+      if (providersRef.current.length === 0) {
+        setSettingsTab("provider");
+        setStylePromptOptimizerId(null);
+        setSettingsOpen(true);
+      }
+    }).then((dispose) => {
+      unlistenShown = dispose;
+    });
     return () => {
       unlisten?.();
+      unlistenShown?.();
       void stopSpeech().catch(() => {});
     };
   }, []);
