@@ -74,6 +74,7 @@ export type AppSettings = {
   defaultTargetLanguage: string;
   closeBehavior: string;
   alwaysOnTop: boolean;
+  fillClipboardOnShortcut: boolean;
   autoCheckUpdates: boolean;
   workMode: string;
   selectedStyleIds: string[];

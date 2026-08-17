@@ -239,6 +239,9 @@ const zhCN = {
   settingsTransfer: "设置数据",
   autoCheckUpdates: "自动检查更新",
   toggleShortcut: "呼出快捷键",
+  fillClipboardOnShortcut: "快捷键填入剪贴板",
+  fillClipboardOnShortcutHint:
+    "开启后，快捷键唤起会读取剪贴板纯文本，可能含密码",
   closeBehavior: "关闭行为",
   launchAtStartup: "开机自启动",
   closeCompletely: "完全关闭",
@@ -495,6 +498,9 @@ const en: Messages = {
   settingsTransfer: "Settings data",
   autoCheckUpdates: "Check for updates automatically",
   toggleShortcut: "Toggle shortcut",
+  fillClipboardOnShortcut: "Fill clipboard on shortcut",
+  fillClipboardOnShortcutHint:
+    "When on, the shortcut reads clipboard plain text, which may include passwords.",
   closeBehavior: "Close behavior",
   launchAtStartup: "Launch at startup",
   closeCompletely: "Quit completely",
@@ -739,6 +745,9 @@ const zhTW: Messages = {
   settingsTransfer: "設定資料",
   autoCheckUpdates: "自動檢查更新",
   toggleShortcut: "呼出快捷鍵",
+  fillClipboardOnShortcut: "快捷鍵填入剪貼簿",
+  fillClipboardOnShortcutHint:
+    "開啟後，快捷鍵喚起會讀取剪貼簿純文字，可能含密碼",
   closeBehavior: "關閉行為",
   launchAtStartup: "開機時自動啟動",
   closeCompletely: "完全關閉",
@@ -990,6 +999,9 @@ const ja: Messages = {
   settingsTransfer: "設定データ",
   autoCheckUpdates: "更新を自動的に確認",
   toggleShortcut: "表示ショートカット",
+  fillClipboardOnShortcut: "ショートカットでクリップボードを入力",
+  fillClipboardOnShortcutHint:
+    "オンにすると、ショートカットで呼び出したときにクリップボードのプレーンテキストを読み取ります。パスワードが含まれる場合があります。",
   closeBehavior: "閉じる動作",
   launchAtStartup: "起動時に自動開始",
   closeCompletely: "完全に終了",
@@ -1242,6 +1254,9 @@ const ko: Messages = {
   settingsTransfer: "설정 데이터",
   autoCheckUpdates: "자동으로 업데이트 확인",
   toggleShortcut: "호출 단축키",
+  fillClipboardOnShortcut: "단축키로 클립보드 채우기",
+  fillClipboardOnShortcutHint:
+    "켜면 단축키로 불러올 때 클립보드의 일반 텍스트를 읽습니다. 비밀번호가 포함될 수 있습니다.",
   closeBehavior: "닫기 동작",
   launchAtStartup: "시작할 때 자동 실행",
   closeCompletely: "완전히 종료",
@@ -1500,6 +1515,9 @@ const es: Messages = {
   settingsTransfer: "Datos de ajustes",
   autoCheckUpdates: "Buscar actualizaciones automáticamente",
   toggleShortcut: "Atajo de acceso",
+  fillClipboardOnShortcut: "Rellenar desde el portapapeles con el atajo",
+  fillClipboardOnShortcutHint:
+    "Si está activado, el atajo lee el texto plano del portapapeles, que puede incluir contraseñas.",
   closeBehavior: "Comportamiento al cerrar",
   launchAtStartup: "Abrir al iniciar",
   closeCompletely: "Salir por completo",
@@ -1763,6 +1781,9 @@ const de: Messages = {
   settingsTransfer: "Einstellungsdaten",
   autoCheckUpdates: "Automatisch nach Updates suchen",
   toggleShortcut: "Einblend-Tastenkürzel",
+  fillClipboardOnShortcut: "Zwischenablage per Tastenkürzel einfügen",
+  fillClipboardOnShortcutHint:
+    "Wenn aktiv, liest das Tastenkürzel Klartext aus der Zwischenablage, der Passwörter enthalten kann.",
   closeBehavior: "Verhalten beim Schließen",
   launchAtStartup: "Beim Systemstart öffnen",
   closeCompletely: "Vollständig beenden",
@@ -2026,6 +2047,9 @@ const fr: Messages = {
   settingsTransfer: "Données des paramètres",
   autoCheckUpdates: "Rechercher automatiquement les mises à jour",
   toggleShortcut: "Raccourci d’affichage",
+  fillClipboardOnShortcut: "Remplir depuis le presse-papiers avec le raccourci",
+  fillClipboardOnShortcutHint:
+    "Une fois activé, le raccourci lit le texte brut du presse-papiers, qui peut contenir des mots de passe.",
   closeBehavior: "Comportement de fermeture",
   launchAtStartup: "Ouvrir au démarrage",
   closeCompletely: "Quitter complètement",
@@ -2288,6 +2312,9 @@ const ptBR: Messages = {
   settingsTransfer: "Dados de configuração",
   autoCheckUpdates: "Verificar atualizações automaticamente",
   toggleShortcut: "Atalho de exibição",
+  fillClipboardOnShortcut: "Preencher com a área de transferência no atalho",
+  fillClipboardOnShortcutHint:
+    "Quando ativado, o atalho lê o texto simples da área de transferência, que pode incluir senhas.",
   closeBehavior: "Comportamento ao fechar",
   launchAtStartup: "Iniciar com o sistema",
   closeCompletely: "Sair completamente",
@@ -2549,6 +2576,9 @@ const ru: Messages = {
   settingsTransfer: "Данные настроек",
   autoCheckUpdates: "Автоматически проверять обновления",
   toggleShortcut: "Горячая клавиша вызова",
+  fillClipboardOnShortcut: "Вставлять буфер обмена по горячей клавише",
+  fillClipboardOnShortcutHint:
+    "Если включено, горячая клавиша читает обычный текст из буфера обмена, в котором могут быть пароли.",
   closeBehavior: "Поведение при закрытии",
   launchAtStartup: "Запускать при входе",
   closeCompletely: "Полностью выйти",
