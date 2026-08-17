@@ -28,6 +28,14 @@ Trali 是一个**轻量级的桌面 AI 翻译器和写作助手**。你自带模
 
 它面向日常办公：消息、邮件、技术文档。快捷键呼出，输入，拿到结果，关掉窗口。它会继续待在托盘里，直到你再次需要。
 
+<p align="center">
+  <img src="./docs/media/hero-light-zh-CN.webp" alt="Trali 翻译一条工作消息" width="720" />
+</p>
+
+<p align="center">
+  <img src="./docs/media/workflow-poster.webp" alt="快捷键呼出 Trali，用完关回托盘" width="720" />
+</p>
+
 ---
 
 ## 为什么做它
