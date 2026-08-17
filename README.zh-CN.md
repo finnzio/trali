@@ -75,7 +75,7 @@ Trali 是一个**轻量级的桌面 AI 翻译器和写作助手**。你自带模
 
 ## 下载
 
-安装包见 **[GitHub Releases](https://github.com/StereoApp/trali/releases)**：
+安装包见 **[GitHub Releases](https://github.com/finnzio/trali/releases)**：
 
 | 平台 | 包格式 |
 |------|--------|
@@ -92,6 +92,10 @@ Trali 是一个**轻量级的桌面 AI 翻译器和写作助手**。你自带模
 > 输入 Mac 登录密码后，再从“应用程序”打开 Trali。这个命令会移除 macOS 为网络下载文件添加的隔离标记，让系统允许应用启动；它不会修复真正损坏的文件，也不会为应用签名，请只对可信来源的应用使用。
 
 你需要自备 API Key，并能访问所选服务商。
+
+### Code signing policy
+
+带版本标签发布的 Windows NSIS 安装包由 [SignPath.io](https://signpath.io) 免费签名，证书由 [SignPath Foundation](https://signpath.org) 签发。详见 [Code signing policy](./CODE_SIGNING.md)。
 
 ### 第一次使用
 

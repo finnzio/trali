@@ -75,7 +75,7 @@ I never found something that fit. So I built Trali.
 
 ## Download
 
-Installers are on **[GitHub Releases](https://github.com/StereoApp/trali/releases)**:
+Installers are on **[GitHub Releases](https://github.com/finnzio/trali/releases)**:
 
 | Platform | Packages |
 |----------|----------|
@@ -92,6 +92,10 @@ Installers are on **[GitHub Releases](https://github.com/StereoApp/trali/release
 > Enter your Mac login password, then open Trali from `Applications`. This removes the quarantine flag macOS adds to files downloaded from the internet so the app can launch. It does not repair a genuinely corrupted file or sign the app, so use it only with a trusted copy.
 
 You need your own API key and network access to the provider you choose.
+
+### Code signing policy
+
+Windows NSIS installers on tagged releases use free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org). See the [Code signing policy](./CODE_SIGNING.md).
 
 ### First run
 
