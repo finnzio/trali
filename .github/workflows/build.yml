@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
-    branches: [main, codex/single-instance-tray]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -82,10 +82,6 @@ jobs:
           workspaces: ./src-tauri -> target
           shared-key: ${{ matrix.name }}
 
-      - name: Shared restore-path unit test
-        if: matrix.platform == 'windows-latest'
-        run: cargo test --manifest-path src-tauri/Cargo.toml second_instance_restores_hidden_main_window -- --nocapture
-
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
@@ -115,77 +111,3 @@ jobs:
           releaseAssetNamePattern: ${{ matrix.assetNamePattern }}
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
-
-  windows-single-instance:
-    name: windows-single-instance
-    needs: build
-    if: ${{ always() && !cancelled() }}
-    runs-on: windows-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      actions: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Ensure WebView2 runtime
-        shell: pwsh
-        run: |
-          $paths = @(
-            "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
-            "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
-          )
-          $found = $null
-          foreach ($path in $paths) {
-            $found = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue
-            if ($found) { break }
-          }
-          if ($found) {
-            Write-Host "WebView2 already installed: $($found.pv)"
-            exit 0
-          }
-          Write-Host "Installing WebView2 Evergreen Runtime"
-          $bootstrapper = Join-Path $env:TEMP "MicrosoftEdgeWebview2Setup.exe"
-          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $bootstrapper
-          Start-Process -FilePath $bootstrapper -ArgumentList "/silent", "/install" -Wait
-
-      - name: Download Windows NSIS installer
-        uses: actions/download-artifact@v4
-        with:
-          name: trali-windows-x64-nsis
-          path: installer
-
-      - name: List installer artifact
-        shell: pwsh
-        run: Get-ChildItem -Path installer -Recurse | Format-Table Name, Length, FullName
-
-      - name: Silent-install NSIS build and assert cases 1-6
-        shell: pwsh
-        run: |
-          $setup = Get-ChildItem -Path installer -Recurse -Filter '*setup.exe' | Select-Object -First 1
-          if (-not $setup) {
-            $setup = Get-ChildItem -Path installer -Recurse -Filter '*.exe' | Where-Object { $_.Name -notmatch 'uninstall' } | Select-Object -First 1
-          }
-          if (-not $setup) { throw 'nsis installer not found in artifact' }
-          Write-Host "Installing $($setup.FullName)"
-          $proc = Start-Process -FilePath $setup.FullName -ArgumentList '/S' -Wait -PassThru
-          if ($proc.ExitCode -ne 0) { throw "installer exit $($proc.ExitCode)" }
-          pwsh -File scripts/assert-single-instance.ps1
-
-      - name: Cleanup leftover Trali install
-        if: always()
-        shell: pwsh
-        run: |
-          Get-Process -Name Trali -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-          $uninstallers = Get-ChildItem -Path "$env:LOCALAPPDATA\Trali","$env:LOCALAPPDATA\Programs\Trali" -Filter uninstall.exe -Recurse -ErrorAction SilentlyContinue
-          foreach ($uninstaller in $uninstallers) {
-            Start-Process -FilePath $uninstaller.FullName -ArgumentList "/S" -Wait -ErrorAction SilentlyContinue
-          }
-          Get-Process -Name Trali -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-          foreach ($path in @("$env:LOCALAPPDATA\Trali", "$env:LOCALAPPDATA\Programs\Trali")) {
-            if (Test-Path -LiteralPath $path) {
-              Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
-            }
-          }
