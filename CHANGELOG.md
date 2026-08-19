@@ -2,7 +2,7 @@
 
 Release notes for Trali. GitHub Releases (and the in-app updater) use the section whose heading matches the git tag.
 
-## Unreleased
+## 0.1.15
 
 - Show changelog notes in Settings → Check for updates and in the update dialog.
 
