@@ -2,6 +2,10 @@
 
 Release notes for Trali. GitHub Releases (and the in-app updater) use the section whose heading matches the git tag.
 
+## 0.1.16
+
+- Ship Linux updater signatures on the same GitHub Release as macOS and Windows.
+
 ## 0.1.15
 
 - Show changelog notes in Settings → Check for updates and in the update dialog.
