@@ -767,7 +767,18 @@ function LanguageSelect({
   );
 }
 
+function UpdateReleaseNotes({ body }: { body?: string | null }) {
+  const notes = body?.trim();
+  if (!notes) return null;
+  return (
+    <div className="max-h-48 overflow-y-auto rounded-lg bg-muted/50 p-3 text-sm whitespace-pre-wrap">
+      {notes}
+    </div>
+  );
+}
+
 function App() {
+
   const { locale, setLocale, t } = useI18n();
   const {
     theme,
@@ -3929,7 +3940,8 @@ function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+                <div className="grid gap-3 rounded-lg border px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">{t("updateTitle")}</p>
                     <p className="text-sm text-muted-foreground">
@@ -3988,6 +4000,8 @@ function App() {
                         : t("checkForUpdates")}
                     </Button>
                   </div>
+                  </div>
+                  <UpdateReleaseNotes body={availableUpdate?.body} />
                 </div>
               </div>
             )}
@@ -4971,11 +4985,7 @@ function App() {
               </DialogDescription>
             </DialogHeader>
 
-            {availableUpdate?.body ? (
-              <div className="max-h-48 overflow-y-auto rounded-lg bg-muted/50 p-3 text-sm whitespace-pre-wrap">
-                {availableUpdate.body}
-              </div>
-            ) : null}
+            <UpdateReleaseNotes body={availableUpdate?.body} />
 
             {updateCheckState === "installing" ? (
               <p className="text-sm text-muted-foreground">

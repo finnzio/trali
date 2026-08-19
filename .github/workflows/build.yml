@@ -86,6 +86,11 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Read changelog for this version
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: notes
+        run: node scripts/release-notes.mjs "${{ github.ref_name }}" --github-output
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v1.0.0
         env:
@@ -96,15 +101,7 @@ jobs:
           # Leave empty on branch/PR builds so no release is created.
           tagName: ${{ startsWith(github.ref, 'refs/tags/v') && 'v__VERSION__' || '' }}
           releaseName: Trali v__VERSION__
-          releaseBody: |
-            Download installers for Windows, macOS, and Linux from the assets below.
-
-            | Platform | Architecture | Packages |
-            |----------|--------------|----------|
-            | Windows | x64 | `.msi`, NSIS `.exe` |
-            | macOS | Apple Silicon (aarch64) | `.dmg` |
-            | macOS | Intel (x64) | `.dmg` |
-            | Linux | x64 (amd64) | `.AppImage`, `.deb` |
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           uploadUpdaterJson: true
